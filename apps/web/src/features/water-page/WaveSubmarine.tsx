@@ -1,4 +1,4 @@
-import { useMemo, useRef, useCallback } from 'react';
+import { useMemo, useRef, useCallback, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -22,6 +22,29 @@ interface WaveSubmarineProps {
   modelYawOffset?: number;
 }
 
+/* ─── Keyboard state helper ─── */
+function useKeyboard() {
+  const keys = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => keys.current.add(e.code);
+    const onUp = (e: KeyboardEvent) => keys.current.delete(e.code);
+    const onBlur = () => keys.current.clear();
+
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
+
+  return keys;
+}
+
+/* ─── Component ─── */
 export function WaveSubmarine({
   url = `${import.meta.env.BASE_URL}submarine.glb`,
   overrides,
@@ -31,26 +54,41 @@ export function WaveSubmarine({
   const groupRef = useRef<THREE.Group>(null);
   const gltf = useGLTF(url) as unknown as GLTFResult;
 
-  // Accumulated simulation time (independent of clock, supports pause/resume)
-  const accTimeRef = useRef(0);
+  /* Simulation state refs */
+  const headingRef = useRef(Math.PI); // initial heading (radians)
+  const velocityRef = useRef(0); // current scalar velocity
+  const posRef = useRef(new THREE.Vector3(0, 0, 0));
   const lastWallRef = useRef<number | null>(null);
+  const accTimeRef = useRef(0);
   const resetRef = useRef(false);
+
+  const keys = useKeyboard();
 
   const doReset = useCallback(() => {
     resetRef.current = true;
   }, []);
 
+  /* ─── Debug controls ─── */
   const [subCtrl] = useDebugControls(
     'Submarine',
     () => ({
-      Controls: {
+      Movement: {
         type: 'folder' as const,
-        title: 'Controls',
+        title: 'Movement',
         controls: {
-          playing: { value: true },
-          speed: { value: 1.25, min: 0.0, max: 10.0, step: 0.05 },
-          angle: { value: 180, min: -180, max: 180, step: 1 },
-          lateralAmplitude: { value: 4.0, min: 0.0, max: 15.0, step: 0.1 },
+          maxSpeed: { value: 5.0, min: 0.5, max: 20.0, step: 0.25 },
+          acceleration: { value: 2.5, min: 0.5, max: 15.0, step: 0.25 },
+          deceleration: { value: 3.0, min: 0.5, max: 15.0, step: 0.25 },
+          reverseRatio: { value: 0.4, min: 0.0, max: 1.0, step: 0.05 },
+          turnRate: { value: 1.8, min: 0.2, max: 5.0, step: 0.1 },
+          turnDecay: { value: 0.5, min: 0.0, max: 1.0, step: 0.05 },
+        },
+      } satisfies FolderControl,
+      'Wave Response': {
+        type: 'folder' as const,
+        title: 'Wave Response',
+        controls: {
+          waveInfluence: { value: 1.0, min: 0.0, max: 2.0, step: 0.05 },
           verticalOffset: { value: 0.12, min: -1.0, max: 1.0, step: 0.01 },
         },
       } satisfies FolderControl,
@@ -82,13 +120,14 @@ export function WaveSubmarine({
 
   const tmp = useMemo(
     () => ({
-      position: new THREE.Vector3(),
-      nextPosition: new THREE.Vector3(),
       up: new THREE.Vector3(0, 1, 0),
       forward: new THREE.Vector3(1, 0, 0),
       right: new THREE.Vector3(0, 0, 1),
       forwardOrtho: new THREE.Vector3(1, 0, 0),
       basis: new THREE.Matrix4(),
+      blendedUp: new THREE.Vector3(0, 1, 0),
+      worldUp: new THREE.Vector3(0, 1, 0),
+      nextPos: new THREE.Vector3(),
       modelFix: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), modelYawOffset),
     }),
     [modelYawOffset],
@@ -98,71 +137,121 @@ export function WaveSubmarine({
     const group = groupRef.current;
     if (!group) return;
 
-    const playing = (subCtrl as Record<string, unknown>).playing as boolean ?? true;
-    const speed = (subCtrl as Record<string, unknown>).speed as number ?? 1.25;
-    const angleDeg = (subCtrl as Record<string, unknown>).angle as number ?? 180;
-    const lateralAmplitude = (subCtrl as Record<string, unknown>).lateralAmplitude as number ?? 4.0;
-    const verticalOffset = (subCtrl as Record<string, unknown>).verticalOffset as number ?? 0.12;
+    /* ── Read controls ── */
+    const ctrl = subCtrl as Record<string, unknown>;
+    const maxSpeed = (ctrl.maxSpeed as number) ?? 5.0;
+    const acceleration = (ctrl.acceleration as number) ?? 2.5;
+    const deceleration = (ctrl.deceleration as number) ?? 3.0;
+    const reverseRatio = (ctrl.reverseRatio as number) ?? 0.4;
+    const turnRate = (ctrl.turnRate as number) ?? 1.8;
+    const turnDecay = (ctrl.turnDecay as number) ?? 0.5;
+    const waveInfluence = (ctrl.waveInfluence as number) ?? 1.0;
+    const verticalOffset = (ctrl.verticalOffset as number) ?? 0.12;
 
-    // Handle reset signal from button
+    /* ── Handle reset ── */
     if (resetRef.current) {
       resetRef.current = false;
+      headingRef.current = Math.PI;
+      velocityRef.current = 0;
+      posRef.current.set(0, 0, 0);
       accTimeRef.current = 0;
       lastWallRef.current = null;
     }
 
+    /* ── Delta time ── */
     const wallTime = clock.getElapsedTime();
-
-    if (lastWallRef.current === null) {
-      lastWallRef.current = wallTime;
-    }
-
-    const delta = wallTime - lastWallRef.current;
+    if (lastWallRef.current === null) lastWallRef.current = wallTime;
+    const dt = Math.min(wallTime - lastWallRef.current, 0.1); // clamp to avoid huge jumps
     lastWallRef.current = wallTime;
-
-    if (playing) {
-      accTimeRef.current += delta;
-    }
-
+    accTimeRef.current += dt;
     const t = accTimeRef.current;
-    const angleRad = (angleDeg * Math.PI) / 180;
-    const dirX = Math.cos(angleRad);
-    const dirZ = Math.sin(angleRad);
-    // Perpendicular direction for lateral sinusoidal drift
-    const perpX = -Math.sin(angleRad);
-    const perpZ = Math.cos(angleRad);
 
-    const lat = Math.sin(t * 0.15) * lateralAmplitude;
-    const x = t * speed * dirX + lat * perpX;
-    const z = t * speed * dirZ + lat * perpZ;
-    const y = sampleWaterHeight(x, z, t, waveConfig) + verticalOffset;
+    /* ── Read keyboard ── */
+    const k = keys.current;
+    const throttle =
+      (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) -
+      (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
+    const steer =
+      (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0) -
+      (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0);
 
-    const dt = 0.12;
-    const lat2 = Math.sin((t + dt) * 0.15) * lateralAmplitude;
-    const x2 = (t + dt) * speed * dirX + lat2 * perpX;
-    const z2 = (t + dt) * speed * dirZ + lat2 * perpZ;
-    const y2 = sampleWaterHeight(x2, z2, t + dt, waveConfig) + verticalOffset;
+    /* ── Velocity (momentum) ── */
+    let vel = velocityRef.current;
+    const maxReverse = -maxSpeed * reverseRatio;
 
-    tmp.position.set(x, y, z);
-    tmp.nextPosition.set(x2, y2, z2);
-
-    sampleWaterNormal(x, z, t, waveConfig, waveConfig.normalEpsilon, tmp.up);
-    tmp.forward.copy(tmp.nextPosition).sub(tmp.position).normalize();
-    tmp.right.copy(tmp.forward).cross(tmp.up).normalize();
-    tmp.forwardOrtho.copy(tmp.up).cross(tmp.right).normalize();
-
-    if (tmp.right.lengthSq() < 1e-6) {
-      tmp.right.set(0, 0, 1);
+    if (throttle > 0) {
+      // Accelerate forward
+      vel += acceleration * dt;
+      if (vel > maxSpeed) vel = maxSpeed;
+    } else if (throttle < 0) {
+      // Accelerate backward (reverse)
+      vel -= acceleration * dt;
+      if (vel < maxReverse) vel = maxReverse;
+    } else {
+      // Coast to stop (deceleration / drag)
+      if (vel > 0) {
+        vel -= deceleration * dt;
+        if (vel < 0) vel = 0;
+      } else if (vel < 0) {
+        vel += deceleration * dt;
+        if (vel > 0) vel = 0;
+      }
     }
-    if (tmp.forwardOrtho.lengthSq() < 1e-6) {
-      tmp.forwardOrtho.set(1, 0, 0);
-    }
+    velocityRef.current = vel;
 
-    tmp.basis.makeBasis(tmp.right, tmp.up, tmp.forwardOrtho);
+    /* ── Heading (turning) ── */
+    // Turn rate scales with speed fraction so turns feel realistic
+    const speedFrac = Math.abs(vel) / maxSpeed;
+    const effectiveTurn = turnRate * Math.pow(Math.max(speedFrac, 0.05), turnDecay);
+    headingRef.current += steer * effectiveTurn * dt;
+
+    /* ── Integrate position ── */
+    const heading = headingRef.current;
+    const dirX = Math.cos(heading);
+    const dirZ = Math.sin(heading);
+
+    const pos = posRef.current;
+    pos.x += dirX * vel * dt;
+    pos.z += dirZ * vel * dt;
+
+    /* ── Wave height & normal with influence scaling ── */
+    const rawHeight = sampleWaterHeight(pos.x, pos.z, t, waveConfig);
+    // Lerp between a flat baseline (waveConfig depth-based) and the actual wave surface
+    const baseWaterLevel = -waveConfig.waveDepth;
+    const waveY = THREE.MathUtils.lerp(baseWaterLevel, rawHeight, waveInfluence) + verticalOffset;
+    pos.y = waveY;
+
+    /* ── Orientation ── */
+    // Sample raw surface normal
+    sampleWaterNormal(pos.x, pos.z, t, waveConfig, waveConfig.normalEpsilon, tmp.up);
+
+    // Blend normal towards world-up based on waveInfluence (0 = perfectly flat, 1 = full wave tilt)
+    tmp.blendedUp.copy(tmp.worldUp).lerp(tmp.up, Math.min(waveInfluence, 1.0)).normalize();
+
+    // Build a look-ahead point for forward direction
+    const lookAheadDist = 0.12;
+    const x2 = pos.x + dirX * lookAheadDist;
+    const z2 = pos.z + dirZ * lookAheadDist;
+    const rawHeight2 = sampleWaterHeight(x2, z2, t, waveConfig);
+    const waveY2 = THREE.MathUtils.lerp(baseWaterLevel, rawHeight2, waveInfluence) + verticalOffset;
+    tmp.nextPos.set(x2, waveY2, z2);
+
+    // Forward = direction of travel projected along surface
+    tmp.forward.copy(tmp.nextPos).sub(pos).normalize();
+    tmp.right.copy(tmp.forward).cross(tmp.blendedUp).normalize();
+    tmp.forwardOrtho.copy(tmp.blendedUp).cross(tmp.right).normalize();
+
+    if (tmp.right.lengthSq() < 1e-6) tmp.right.set(0, 0, 1);
+    if (tmp.forwardOrtho.lengthSq() < 1e-6) tmp.forwardOrtho.set(1, 0, 0);
+
+    tmp.basis.makeBasis(tmp.right, tmp.blendedUp, tmp.forwardOrtho);
     group.quaternion.setFromRotationMatrix(tmp.basis);
     group.quaternion.multiply(tmp.modelFix);
-    group.position.copy(tmp.position);
-    group.rotateOnAxis(tmp.forwardOrtho, Math.sin(t * 0.8) * 0.01);
+    group.position.copy(pos);
+
+    // Subtle hull roll when turning
+    const rollAmount = -steer * speedFrac * 0.08;
+    group.rotateOnAxis(tmp.forwardOrtho, rollAmount);
   });
 
   return (
