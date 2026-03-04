@@ -1,0 +1,15 @@
+{
+  "name": "debug",
+  "sourceRoot": "libs/debug/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/debug" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/debug" }
+    }
+  }
+}

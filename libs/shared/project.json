@@ -1,0 +1,15 @@
+{
+  "name": "shared",
+  "sourceRoot": "libs/shared/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/shared" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/shared" }
+    }
+  }
+}

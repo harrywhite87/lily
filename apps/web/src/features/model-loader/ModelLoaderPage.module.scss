@@ -1,0 +1,43 @@
+.page {
+  position: fixed;
+  inset: 0;
+  padding-top: 48px;
+  background: var(--color-deep-navy);
+}
+
+/* ── Drag-over state on the whole page ── */
+.dragOver::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  border: 3px solid var(--color-aqua);
+  background: rgba(92, 224, 216, 0.06);
+  animation: pulseGlow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  from { box-shadow: inset 0 0 30px rgba(92, 224, 216, 0.05); }
+  to   { box-shadow: inset 0 0 60px rgba(92, 224, 216, 0.12); }
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* ── Drop hint label ── */
+.dropHint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 55;
+  pointer-events: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-aqua);
+  text-shadow: 0 2px 16px rgba(10, 22, 40, 0.8);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}

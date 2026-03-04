@@ -1,0 +1,287 @@
+/* ─────────────────────────────────────────────────────── */
+/*  Controls panel — widget styles                        */
+/* ─────────────────────────────────────────────────────── */
+
+/* ─── group ─── */
+.group {
+  margin-bottom: 6px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.groupHeader {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+  text-transform: uppercase;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.groupChevron {
+  font-size: 8px;
+  transition: transform 150ms ease;
+}
+
+.groupChevronOpen {
+  transform: rotate(90deg);
+}
+
+.groupBody {
+  display: grid;
+  gap: 3px;
+  padding-left: 4px;
+}
+
+/* ─── row (shared across widget types) ─── */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.label {
+  flex: 0 0 auto;
+  max-width: 45%;
+  font-size: 11px;
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.valueWrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* ─── number slider ─── */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.10);
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.75);
+    border: none;
+    cursor: grab;
+    transition: background 100ms ease, transform 100ms ease;
+
+    &:hover {
+      background: #fff;
+      transform: scale(1.2);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.75);
+    border: none;
+    cursor: grab;
+
+    &:hover {
+      background: #fff;
+    }
+  }
+}
+
+.numValue {
+  flex: 0 0 auto;
+  min-width: 38px;
+  text-align: right;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* ─── boolean toggle ─── */
+.toggle {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.10);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 150ms ease;
+}
+
+.toggleOn {
+  background: rgba(120, 220, 150, 0.5);
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  transition: left 150ms ease, background 150ms ease;
+}
+
+.toggleThumbOn {
+  left: 14px;
+  background: #fff;
+}
+
+/* ─── color picker ─── */
+.colorWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.colorSwatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+
+  input[type='color'] {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    margin: -4px;
+  }
+
+  input[type='color']::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  input[type='color']::-webkit-color-swatch {
+    border: none;
+  }
+}
+
+.colorHex {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+  font-family: monospace;
+}
+
+/* ─── button ─── */
+.btn {
+  all: unset;
+  cursor: pointer;
+  display: block;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 11px;
+  text-align: center;
+  opacity: 0.85;
+  transition: background 120ms ease, opacity 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    opacity: 1;
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* ─── read-only ─── */
+.readOnly {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* ─── select dropdown ─── */
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 3px 22px 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.07)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.55)'/%3E%3C/svg%3E")
+    no-repeat right 6px center;
+  background-size: 10px 6px;
+  color: inherit;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 120ms ease, background-color 120ms ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+
+  &:focus {
+    border-color: rgba(255, 255, 255, 0.30);
+  }
+
+  option {
+    background: #1a1a2e;
+    color: #fff;
+  }
+}
+
+/* ─── divider between groups ─── */
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 4px 0;
+}
+
+/* ─── empty state ─── */
+.empty {
+  opacity: 0.45;
+  font-size: 11px;
+  padding: 8px 0;
+  text-align: center;
+}

@@ -1,0 +1,119 @@
+/* ── Global Reset & Base Styles ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* ── Navy Nautical Palette (legacy) ── */
+  --color-deep-navy: #0a1628;
+  --color-navy: #0f2240;
+  --color-navy-mid: #162d50;
+  --color-navy-light: #1e3a5f;
+  --color-slate: #2a4a7f;
+  --color-teal: #1a7a8a;
+  --color-teal-light: #2ec4b6;
+  --color-aqua: #5ce0d8;
+  --color-sand: #e8dcc8;
+  --color-cream: #f5f0e8;
+  --color-white: #ffffff;
+  --color-gold: #c9a84c;
+
+  /* ── Style Baseline: Neutrals ── */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-500: #737373;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+
+  /* ── Style Baseline: Primary ── */
+  --color-primary-100: #dbeafe;
+  --color-primary-500: #3b82f6;
+  --color-primary-900: #1e3a8a;
+
+  /* ── Style Baseline: Semantic ── */
+  --color-error: #ef4444;
+  --color-success: #22c55e;
+
+  /* ── Style Baseline: Defaults ── */
+  --bg-primary: var(--color-neutral-50);
+  --text-primary: var(--color-neutral-900);
+  --text-secondary: var(--color-neutral-500);
+
+  /* ── Style Baseline: Sizing ── */
+  --size-100: 1px;
+  --size-200: 2px;
+  --size-300: 4px;
+  --size-400: 8px;
+  --size-500: 16px;
+  --size-600: 24px;
+  --size-700: 32px;
+  --size-800: 48px;
+  --size-900: 64px;
+
+  /* ── Style Baseline: Radii ── */
+  --radius-300: 4px;
+  --radius-400: 8px;
+  --radius-500: 16px;
+  --radius-round: 9999px;
+
+  /* ── Typography ── */
+  --font-body: 'Noto Sans', sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+
+  /* ── Legacy Spacing ── */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+  --space-2xl: 8rem;
+
+  /* ── Transitions ── */
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-base: 0.3s var(--ease-smooth);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--color-cream);
+  background: var(--color-deep-navy);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+a {
+  color: var(--color-teal-light);
+  text-decoration: none;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,154 @@
+/* ─── PropertiesPanel ─── */
+
+.wrapper {
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+}
+
+.panel {
+  min-width: 0;
+}
+
+.placeholder {
+  font-size: 11px;
+  opacity: 0.4;
+  padding: 6px 0;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ─── Object header ─── */
+.objHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+
+  .objType {
+    font-size: 10px;
+    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .objName {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ─── Gizmo toolbar ─── */
+.toolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.toolBtn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.65;
+  transition: background 120ms ease, opacity 120ms ease, box-shadow 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.10);
+    opacity: 0.9;
+  }
+}
+
+.toolBtnActive {
+  background: rgba(120, 200, 255, 0.14);
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(120, 200, 255, 0.3);
+}
+
+.toolIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.section {
+  margin-bottom: 6px;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.45;
+  margin-bottom: 3px;
+}
+
+/* ─── Row of 3 inputs ─── */
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 5px;
+  padding: 3px 5px;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
+}
+
+.axisLabel {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.55;
+  min-width: 10px;
+  text-align: center;
+}
+
+/* colour-coded axis labels */
+.axisX { color: #ff6b6b; }
+.axisY { color: #69db7c; }
+.axisZ { color: #74c0fc; }
+
+.input {
+  all: unset;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  font-size: 11px;
+  width: 100%;
+  color: #e8ecf2;
+  text-align: right;
+
+  /* hide number spinners */
+  appearance: textfield;
+  -moz-appearance: textfield;
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}

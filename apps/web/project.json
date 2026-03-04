@@ -1,0 +1,27 @@
+{
+  "name": "web",
+  "sourceRoot": "apps/web/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "command": "vite --host",
+      "options": { "cwd": "apps/web" }
+    },
+    "build": {
+      "command": "vite build",
+      "options": { "cwd": "apps/web" }
+    },
+    "lint": {
+      "command": "eslint src",
+      "options": { "cwd": "apps/web" }
+    },
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "apps/web" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "apps/web" }
+    }
+  }
+}

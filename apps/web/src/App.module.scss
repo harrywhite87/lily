@@ -1,0 +1,19 @@
+.viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.verticalTrack {
+  will-change: transform;
+  transition: none;
+}
+
+.horizontalTrack {
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  will-change: transform;
+  transition: none;
+}

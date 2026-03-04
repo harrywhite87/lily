@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "typeRoots": ["node_modules/@types"],
+    "paths": {
+      "@lilypad/shared": ["libs/shared/src/index.ts"],
+      "@lilypad/scroll": ["libs/scroll/src/index.ts"],
+      "@lilypad/animation": ["libs/animation/src/index.ts"],
+      "@lilypad/debug": ["libs/debug/src/index.ts"],
+      "@lilypad/three-assets": ["libs/three/assets/src/index.ts"],
+      "@lilypad/three-particles": ["libs/three/particles/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}

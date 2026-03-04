@@ -1,0 +1,28 @@
+.page {
+  position: fixed;
+  inset: 0;
+  padding-top: 48px; /* nav bar height */
+  background: #0a0a0f;
+}
+
+.title {
+  position: absolute;
+  bottom: var(--space-xl);
+  left: var(--space-xl);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.title h1 {
+  font-size: 2.5rem;
+  color: #00e5ff;
+  text-shadow: 0 2px 24px rgba(0, 229, 255, 0.3);
+  margin-bottom: var(--space-xs);
+}
+
+.title p {
+  font-size: 1rem;
+  color: #8ecae6;
+  opacity: 0.8;
+  max-width: 420px;
+}

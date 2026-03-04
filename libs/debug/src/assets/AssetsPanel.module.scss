@@ -1,0 +1,154 @@
+/* ─────────────────────────────────────────────── */
+/*  AssetsPanel — glassmorphic debug asset browser */
+/* ─────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.toolBtn {
+  all: unset;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 120ms ease, opacity 120ms ease;
+  opacity: 0.85;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    opacity: 1;
+  }
+}
+
+.uploadLabel {
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 120ms ease, opacity 120ms ease;
+  opacity: 0.85;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    opacity: 1;
+  }
+}
+
+/* ─── scrollable asset list ─── */
+.list {
+  max-height: 260px;
+  overflow-y: auto;
+  display: grid;
+  gap: 4px;
+}
+
+/* ─── asset card row ─── */
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.09);
+  }
+}
+
+.cardInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.cardName {
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardKind {
+  font-size: 10px;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cardActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  all: unset;
+  cursor: pointer;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.8;
+  transition: background 120ms ease, opacity 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    opacity: 1;
+  }
+}
+
+.spawnBtn {
+  all: unset;
+  cursor: pointer;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.8;
+  transition: background 120ms ease, opacity 120ms ease;
+  color: #8af;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    opacity: 1;
+  }
+}
+
+.removeBtn {
+  all: unset;
+  cursor: pointer;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.8;
+  transition: background 120ms ease, opacity 120ms ease;
+  color: #fa8;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    opacity: 1;
+  }
+}
+
+/* ─── empty state ─── */
+.empty {
+  opacity: 0.45;
+  font-size: 11px;
+  text-align: center;
+  padding: 12px 0;
+}

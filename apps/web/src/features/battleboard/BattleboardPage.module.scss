@@ -1,0 +1,220 @@
+// ── Palette ───────────────────────────────────────────────────────
+$hud:       #00ffcc;
+$hud-dim:   rgba(0, 255, 200, 0.32);
+$hud-faint: rgba(0, 255, 200, 0.12);
+
+// ── Layout ────────────────────────────────────────────────────────
+.page {
+  position: fixed;
+  inset: 0;
+  padding-top: 48px; // nav bar height
+  background: #020c14;
+  display: flex;
+  flex-direction: column;
+}
+
+.canvasWrap {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+// ── HUD overlay (pointer-events: none so it doesn't block canvas) ─
+.hud {
+  position: absolute;
+  inset: 0;
+  bottom: 40px; // above toolbar
+  pointer-events: none;
+  z-index: 10;
+}
+
+// ── Ruler – right side ────────────────────────────────────────────
+.rulerRight {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+  border-left: 1px solid $hud-dim;
+  overflow: hidden;
+}
+
+.tick {
+  position: absolute;
+  right: 0;
+  width: 7px;
+  height: 1px;
+  background: $hud-dim;
+  transform: translateY(-50%);
+}
+
+.tickMajor {
+  width: 14px;
+  background: rgba(0, 255, 200, 0.5);
+}
+
+.tickLabel {
+  position: absolute;
+  right: 16px;
+  top: -6px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 7px;
+  color: rgba(0, 255, 200, 0.55);
+  white-space: nowrap;
+}
+
+// ── Ruler – top ───────────────────────────────────────────────────
+.rulerTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 26px;
+  height: 18px;
+  border-bottom: 1px solid $hud-dim;
+  overflow: hidden;
+}
+
+.tickH {
+  position: absolute;
+  top: auto;
+  bottom: 0;
+  width: 1px;
+  height: 7px;
+  background: $hud-dim;
+  transform: translateX(-50%);
+}
+
+.tickHMajor {
+  height: 14px;
+  background: rgba(0, 255, 200, 0.5);
+}
+
+.tickLabelH {
+  position: absolute;
+  bottom: 16px;
+  left: 2px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 7px;
+  color: rgba(0, 255, 200, 0.55);
+  white-space: nowrap;
+}
+
+// ── Corner brackets ───────────────────────────────────────────────
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+}
+
+.cornerTL {
+  top: 18px;
+  left: 0;
+  border-top: 2px solid $hud;
+  border-left: 2px solid $hud;
+}
+
+.cornerTR {
+  top: 18px;
+  right: 26px;
+  border-top: 2px solid $hud;
+  border-right: 2px solid $hud;
+}
+
+.cornerBL {
+  bottom: 0;
+  left: 0;
+  border-bottom: 2px solid $hud;
+  border-left: 2px solid $hud;
+}
+
+.cornerBR {
+  bottom: 0;
+  right: 26px;
+  border-bottom: 2px solid $hud;
+  border-right: 2px solid $hud;
+}
+
+// ── Brand watermark ───────────────────────────────────────────────
+.brandLabel {
+  position: absolute;
+  bottom: 10px;
+  right: 44px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: rgba(0, 255, 200, 0.22);
+  pointer-events: none;
+}
+
+// ── Bottom toolbar ────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 14px;
+  background: rgba(1, 8, 16, 0.92);
+  border-top: 1px solid rgba(0, 255, 200, 0.18);
+  height: 40px;
+  flex-shrink: 0;
+  z-index: 20;
+  position: relative;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolSep {
+  flex: 1;
+}
+
+.btn {
+  padding: 3px 11px;
+  border: 1px solid rgba(0, 255, 200, 0.28);
+  background: transparent;
+  color: rgba(0, 255, 200, 0.6);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: $hud-faint;
+    border-color: rgba(0, 255, 200, 0.55);
+    color: $hud;
+  }
+}
+
+.btnActive {
+  background: rgba(0, 255, 200, 0.14);
+  border-color: $hud;
+  color: $hud;
+  box-shadow: 0 0 8px rgba(0, 255, 200, 0.18);
+}
+
+.scaleLabel {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: rgba(0, 255, 200, 0.4);
+  margin-right: 5px;
+  text-transform: uppercase;
+}
+
+// ── Target labels (rendered inside R3F <Html>) ────────────────────
+.targetLabel {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  color: $hud;
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgba(0, 255, 200, 0.7);
+  margin-left: 10px;
+  line-height: 1.35;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.9;
+}

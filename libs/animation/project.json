@@ -1,0 +1,15 @@
+{
+  "name": "animation",
+  "sourceRoot": "libs/animation/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/animation" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/animation" }
+    }
+  }
+}
