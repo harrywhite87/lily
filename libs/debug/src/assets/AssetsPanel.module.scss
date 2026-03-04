@@ -1,44 +1,43 @@
-/* ─────────────────────────────────────────────── */
-/*  AssetsPanel — glassmorphic debug asset browser */
-/* ─────────────────────────────────────────────── */
+/* ─────────────────────────────────────── */
+/*  AssetsPanel — Style Baseline          */
+/*  (theme-aware)                         */
+/* ─────────────────────────────────────── */
 
 .toolbar {
   display: flex;
-  gap: 6px;
+  gap: var(--size-300);
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: var(--size-400);
 }
 
 .toolBtn {
   all: unset;
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 8px;
+  padding: var(--size-300) var(--size-400);
+  border-radius: var(--radius-300);
   font-size: 11px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.08);
-  transition: background 120ms ease, opacity 120ms ease;
-  opacity: 0.85;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  transition: opacity 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.14);
-    opacity: 1;
+    opacity: 0.7;
   }
 }
 
 .uploadLabel {
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 8px;
+  padding: var(--size-300) var(--size-400);
+  border-radius: var(--radius-300);
   font-size: 11px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.08);
-  transition: background 120ms ease, opacity 120ms ease;
-  opacity: 0.85;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  transition: opacity 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.14);
-    opacity: 1;
+    opacity: 0.7;
   }
 }
 
@@ -47,7 +46,7 @@
   max-height: 260px;
   overflow-y: auto;
   display: grid;
-  gap: 4px;
+  gap: var(--size-200);
 }
 
 /* ─── asset card row ─── */
@@ -55,15 +54,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  transition: background 120ms ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.09);
-  }
+  gap: var(--size-400);
+  padding: var(--size-300) var(--size-400);
+  border-radius: var(--radius-300);
+  background: var(--bg-surface);
+  transition: background-color 0.2s ease;
 }
 
 .cardInfo {
@@ -72,8 +67,9 @@
 }
 
 .cardName {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 11px;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -81,74 +77,66 @@
 
 .cardKind {
   font-size: 10px;
-  opacity: 0.55;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .cardActions {
   display: flex;
-  gap: 4px;
+  gap: var(--size-200);
   flex-shrink: 0;
 }
 
 .actionBtn {
   all: unset;
   cursor: pointer;
-  padding: 3px 7px;
-  border-radius: 6px;
+  padding: var(--size-200) var(--size-300);
+  border-radius: var(--radius-300);
   font-size: 10px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.08);
-  opacity: 0.8;
-  transition: background 120ms ease, opacity 120ms ease;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.16);
-    opacity: 1;
+    color: var(--text-primary);
   }
 }
 
 .spawnBtn {
   all: unset;
   cursor: pointer;
-  padding: 3px 7px;
-  border-radius: 6px;
+  padding: var(--size-200) var(--size-300);
+  border-radius: var(--radius-300);
   font-size: 10px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.08);
-  opacity: 0.8;
-  transition: background 120ms ease, opacity 120ms ease;
-  color: #8af;
+  color: var(--color-primary-500);
+  transition: opacity 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.16);
-    opacity: 1;
+    opacity: 0.7;
   }
 }
 
 .removeBtn {
   all: unset;
   cursor: pointer;
-  padding: 3px 7px;
-  border-radius: 6px;
+  padding: var(--size-200) var(--size-300);
+  border-radius: var(--radius-300);
   font-size: 10px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.08);
-  opacity: 0.8;
-  transition: background 120ms ease, opacity 120ms ease;
-  color: #fa8;
+  color: var(--color-error);
+  transition: opacity 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.16);
-    opacity: 1;
+    opacity: 0.7;
   }
 }
 
 /* ─── empty state ─── */
 .empty {
-  opacity: 0.45;
+  color: var(--text-secondary);
   font-size: 11px;
   text-align: center;
-  padding: 12px 0;
+  padding: var(--size-500) 0;
 }

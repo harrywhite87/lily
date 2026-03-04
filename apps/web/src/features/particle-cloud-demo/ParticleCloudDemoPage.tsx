@@ -11,6 +11,7 @@ import {
   type ParticleCloudTuning,
 } from '@lilypad/three-particles';
 import styles from './ParticleCloudDemoPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 const SUB_URL = `${import.meta.env.BASE_URL}submarine.glb`;
 useGLTF.preload(SUB_URL);
@@ -154,7 +155,7 @@ function Scene() {
 
 export function ParticleCloudDemoPage() {
   return (
-    <div className={styles.page}>
+    <PageLayout background="#060612">
       <Canvas
         camera={{ fov: 50, near: 0.1, far: 100, position: [0, 2, 7] }}
         gl={{ antialias: true }}
@@ -175,6 +176,6 @@ export function ParticleCloudDemoPage() {
           Select a cloud in Inspector scene panel to edit custom fields.
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

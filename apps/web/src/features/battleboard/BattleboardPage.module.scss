@@ -4,14 +4,7 @@ $hud-dim:   rgba(0, 255, 200, 0.32);
 $hud-faint: rgba(0, 255, 200, 0.12);
 
 // ── Layout ────────────────────────────────────────────────────────
-.page {
-  position: fixed;
-  inset: 0;
-  padding-top: 48px; // nav bar height
-  background: #020c14;
-  display: flex;
-  flex-direction: column;
-}
+// Page layout is provided by PageLayout component.
 
 .canvasWrap {
   position: relative;

@@ -5,7 +5,7 @@ import { DebugOverlay, useDebugControls } from '@lilypad/debug';
 import type { FolderControl } from '@lilypad/debug';
 import { ParticlesMorph, extractGeometry, normalizeGeometry } from '@lilypad/three-particles';
 import * as THREE from 'three';
-import styles from './ParticlesPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 
 /* ───────── GLB loader sub-component ───────── */
@@ -387,7 +387,7 @@ export function ParticlesPage() {
   const morphKey = `${fromUrl ?? 'default-from'}_${toUrl ?? 'default-to'}_${controls.count}_${fromGeo ? 'fg' : ''}${toGeo ? 'tg' : ''}`;
 
   return (
-    <div className={styles.page}>
+    <PageLayout background="#05050a">
       {/* hidden file inputs */}
       <input
         ref={fromInputRef}
@@ -449,7 +449,7 @@ export function ParticlesPage() {
       </Canvas>
 
   
-    </div>
+    </PageLayout>
   );
 }
 

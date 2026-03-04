@@ -10,7 +10,7 @@
 
 .content {
   max-width: 600px;
-  padding: 2rem;
+  padding: var(--size-700);
 }
 
 .tag {
@@ -19,14 +19,14 @@
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--size-500);
 }
 
 .hero {
   font-size: clamp(2rem, 5vw, 4rem);
-  color: #fff;
-  margin-bottom: 1rem;
+  color: var(--text-primary);
+  margin-bottom: var(--size-500);
 
   em {
     font-style: italic;
@@ -36,5 +36,5 @@
 .subtitle {
   font-size: 1rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
 }

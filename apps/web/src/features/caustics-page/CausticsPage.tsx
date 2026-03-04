@@ -5,7 +5,7 @@ import { DebugOverlay, useDebugControls } from '@lilypad/debug';
 import { Caustics } from '../shaders/Caustics';
 import { useShaderConfig, CAUSTICS_DEFAULTS } from '../config/ShaderConfigContext';
 import type { CausticsOverrides } from '../shaders/Caustics';
-import styles from './CausticsPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 export function CausticsPage() {
   const { config, setCaustics, downloadConfig, importConfig, resetAll } = useShaderConfig();
@@ -58,7 +58,7 @@ export function CausticsPage() {
   }, [overrides, setCaustics]);
 
   return (
-    <div className={styles.page}>
+    <PageLayout background="var(--color-deep-navy)">
       <input
         ref={importRef}
         type="file"
@@ -84,6 +84,6 @@ export function CausticsPage() {
       </Canvas>
 
  
-    </div>
+    </PageLayout>
   );
 }

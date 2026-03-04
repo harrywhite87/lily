@@ -4,7 +4,7 @@ import { DebugOverlay } from '@lilypad/debug';
 import { usePathBuilder } from './usePathBuilder';
 import { PathMarkers } from './PathMarkers';
 import { PathLine } from './PathLine';
-import styles from './PathBuilderPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 function PathScene() {
   const { points, onPointMoved } = usePathBuilder();
@@ -19,7 +19,7 @@ function PathScene() {
 
 export function PathBuilderPage() {
   return (
-    <div className={styles.page}>
+    <PageLayout background="#0a0a0f">
       <Canvas
         camera={{ position: [6, 5, 8], fov: 50, near: 0.1, far: 1000 }}
         gl={{ alpha: false, antialias: true }}
@@ -54,6 +54,6 @@ export function PathBuilderPage() {
       </Canvas>
 
    
-    </div>
+    </PageLayout>
   );
 }

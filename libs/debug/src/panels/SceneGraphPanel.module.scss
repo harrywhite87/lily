@@ -1,0 +1,82 @@
+/* ─── SceneGraphPanel — Style Baseline (theme-aware) ─── */
+
+.scrollArea {
+  max-height: 240px;
+  overflow: auto;
+  padding-right: var(--size-300);
+}
+
+.nodeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--size-300);
+}
+
+.nodeBtn {
+  all: unset;
+  cursor: pointer;
+  display: block;
+  flex: 1;
+  min-width: 0;
+  padding: var(--size-200) var(--size-300);
+  border-radius: var(--radius-300);
+  background: transparent;
+  font-size: 11px;
+  line-height: 18px;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: var(--bg-elevated-subtle);
+  }
+}
+
+.nodeBtnSelected {
+  background: rgba(255, 255, 100, 0.14);
+
+  &:hover {
+    background: rgba(255, 255, 100, 0.14);
+  }
+}
+
+.nodeType {
+  opacity: 0.55;
+  margin-right: var(--size-300);
+}
+
+.nodeNameHidden {
+  opacity: 0.4;
+}
+
+.iconBtn {
+  all: unset;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-300);
+  text-align: center;
+  font-size: 11px;
+  line-height: 18px;
+  background: var(--bg-elevated-subtle);
+  opacity: 0.8;
+  transition: opacity 120ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.dragHandle {
+  composes: iconBtn;
+  cursor: grab;
+  opacity: 0.55;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.empty {
+  opacity: 0.5;
+  font-size: 11px;
+  padding: var(--size-300);
+}

@@ -4,6 +4,7 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Swarm, ParticleCloud, extractGeometry, normalizeGeometry } from '@lilypad/three-particles';
 import styles from './SwarmDemoPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 const SUB_URL = `${import.meta.env.BASE_URL}submarine.glb`;
 useGLTF.preload(SUB_URL);
@@ -93,7 +94,7 @@ function Scene() {
 
 export function SwarmDemoPage() {
   return (
-    <div className={styles.page}>
+    <PageLayout background="#060612">
       <Canvas
         camera={{ fov: 45, near: 0.1, far: 100, position: [0, 3.5, 10] }}
         gl={{ antialias: true }}
@@ -111,6 +112,6 @@ export function SwarmDemoPage() {
           Orbital swarm — varying speeds
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

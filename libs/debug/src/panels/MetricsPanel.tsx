@@ -1,14 +1,15 @@
 import { useCallback, useMemo } from 'react';
 import { useDebugStore } from '../core/store';
 import type { CameraState } from '../r3f/types';
+import styles from './MetricsPanel.module.scss';
 
 /* ─── Row ─── */
 
 function Row(props: { label: string; value: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-      <span style={{ opacity: 0.7, fontSize: 11 }}>{props.label}</span>
-      <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
+    <div className={styles.row}>
+      <span className={styles.rowLabel}>{props.label}</span>
+      <span className={styles.rowValue}>
         {props.value}
       </span>
     </div>
@@ -16,15 +17,7 @@ function Row(props: { label: string; value: React.ReactNode }) {
 }
 
 function Divider() {
-  return (
-    <div
-      style={{
-        height: 1,
-        background: 'rgba(255,255,255,0.08)',
-        margin: '2px 0',
-      }}
-    />
-  );
+  return <div className={styles.divider} />;
 }
 
 /* ─── Camera section ─── */
@@ -73,30 +66,9 @@ function CopyButton({ cam }: { cam: CameraState }) {
   return (
     <button
       onClick={handleCopy}
-      style={{
-        all: 'unset',
-        cursor: 'pointer',
-        display: 'block',
-        width: '100%',
-        padding: '4px 8px',
-        borderRadius: 6,
-        background: 'rgba(255,255,255,0.07)',
-        fontSize: 11,
-        textAlign: 'center',
-        opacity: 0.85,
-        transition: 'background 120ms ease, opacity 120ms ease',
-        marginTop: 4,
-      }}
-      onMouseEnter={(e) => {
-        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.14)';
-        (e.target as HTMLElement).style.opacity = '1';
-      }}
-      onMouseLeave={(e) => {
-        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
-        (e.target as HTMLElement).style.opacity = '0.85';
-      }}
+      className={styles.copyBtn}
     >
-      📋 Copy Camera Config
+      Copy Camera Config
     </button>
   );
 }
@@ -108,7 +80,7 @@ export function MetricsPanel() {
   const cam = m.camera;
 
   return (
-    <div style={{ display: 'grid', gap: 5 }}>
+    <div className={styles.grid}>
       <Row label="FPS" value={m.fps.toFixed(1)} />
       <Row label="Frame (ms)" value={m.frameMs.toFixed(2)} />
       <Divider />
@@ -120,7 +92,7 @@ export function MetricsPanel() {
       <Row label="Geometries" value={m.geometries} />
       <Row label="Textures" value={m.textures} />
       <Divider />
-      <div style={{ opacity: 0.55, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>
+      <div className={styles.sectionHeading}>
         Camera
       </div>
       <Vec3Row label="Position" v={cam.position} />

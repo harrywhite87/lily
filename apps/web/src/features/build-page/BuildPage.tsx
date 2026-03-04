@@ -4,7 +4,7 @@ import { DebugOverlay, useDebugControls } from '@lilypad/debug';
 import type { FolderControl } from '@lilypad/debug';
 import { BuildSubmarine } from '../shaders/BuildMaterial';
 import type { BuildOverrides } from '../shaders/BuildMaterial';
-import styles from './BuildPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 export function BuildPage() {
   const overrides = useDebugControls('Build', {
@@ -53,7 +53,7 @@ export function BuildPage() {
   });
 
   return (
-    <div className={styles.page}>
+    <PageLayout background="#0d0d0d">
       <Canvas
         camera={{ position: [0.94, 0.81, -1.35], fov: 50, near: 0.10, far: 1000 }}
         gl={{ alpha: false, antialias: true }}
@@ -74,6 +74,6 @@ export function BuildPage() {
       </Canvas>
 
    
-    </div>
+    </PageLayout>
   );
 }

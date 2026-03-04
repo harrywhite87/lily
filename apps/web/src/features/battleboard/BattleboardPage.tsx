@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import styles from './BattleboardPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 // ── Display volume constants ──────────────────────────────────────
 const DW = 5.5;      // width  (x)
@@ -337,7 +338,7 @@ export function BattleboardPage() {
   const [scale, setScale] = useState<(typeof SCALES)[number]>('10 Miles');
 
   return (
-    <div className={styles.page}>
+    <PageLayout background="#020c14" style={{ display: 'flex', flexDirection: 'column' }}>
       <div className={styles.canvasWrap}>
         <Canvas
           camera={{ fov: 44, near: 0.1, far: 100, position: [5.5, 5.8, 7.5] }}
@@ -387,6 +388,6 @@ export function BattleboardPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

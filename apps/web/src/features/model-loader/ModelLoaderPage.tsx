@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useModel, DEFAULT_MODEL } from './ModelContext';
 import { ModelInspector } from './ModelInspector';
 import { useModelUpload } from './useModelUpload';
+import { PageLayout } from '../layout/PageLayout';
 import styles from './ModelLoaderPage.module.scss';
 
 /** Loads a GLTF and exposes a cloned scene for rendering + inspection. */
@@ -63,8 +64,9 @@ export function ModelLoaderPage() {
   }, [previewUrl, isCustom, handleReset]);
 
   return (
-    <div
-      className={`${styles.page} ${dragOver ? styles.dragOver : ''}`}
+    <PageLayout
+      background="var(--color-deep-navy)"
+      className={dragOver ? styles.dragOver : ''}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -97,7 +99,7 @@ export function ModelLoaderPage() {
         />
         <DebugOverlay plugins={[AssetsPlugin(manager)]} />
       </Canvas>
-    </div>
+    </PageLayout>
   );
 }
 

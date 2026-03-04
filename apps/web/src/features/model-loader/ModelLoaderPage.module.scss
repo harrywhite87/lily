@@ -1,9 +1,4 @@
-.page {
-  position: fixed;
-  inset: 0;
-  padding-top: 48px;
-  background: var(--color-deep-navy);
-}
+/* ── Layout is provided by PageLayout ── */
 
 /* ── Drag-over state on the whole page ── */
 .dragOver::after {

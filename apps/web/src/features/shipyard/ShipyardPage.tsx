@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { DebugOverlay, useDebugControls, AssetsPlugin } from '@lilypad/debug';
 import { useAssetRegistry } from '@lilypad/three-assets';
-import styles from './ShipyardPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 const SHIPYARD_MODEL = `${import.meta.env.BASE_URL}shipyard.glb`;
 
@@ -20,7 +20,7 @@ export function ShipyardPage() {
   });
 
   return (
-    <div className={styles.page}>
+    <PageLayout background="var(--color-deep-navy)">
       <Canvas
         
         camera={{
@@ -46,7 +46,7 @@ export function ShipyardPage() {
         />
         <DebugOverlay plugins={[AssetsPlugin(manager)]} />
       </Canvas>
-    </div>
+    </PageLayout>
   );
 }
 

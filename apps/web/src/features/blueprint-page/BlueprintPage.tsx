@@ -3,7 +3,7 @@ import { OrbitControls } from '@react-three/drei';
 import { DebugOverlay, useDebugControls } from '@lilypad/debug';
 import { BlueprintSubmarine } from '../shaders/BlueprintMaterial';
 import type { BlueprintOverrides } from '../shaders/BlueprintMaterial';
-import styles from './BlueprintPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 export function BlueprintPage() {
   const overrides = useDebugControls('Blueprint Grid', {
@@ -18,7 +18,7 @@ export function BlueprintPage() {
   });
 
   return (
-    <div className={styles.page}>
+    <PageLayout background="var(--color-deep-navy)">
       <Canvas
         camera={{ position: [0.94, 0.81, -1.35], fov: 50, near: 0.10, far: 1000 }}
         gl={{ alpha: false, antialias: true }}
@@ -37,6 +37,6 @@ export function BlueprintPage() {
         <DebugOverlay />
       </Canvas>
 
-    </div>
+    </PageLayout>
   );
 }

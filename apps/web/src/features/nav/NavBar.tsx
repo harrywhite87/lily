@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useTheme } from '../theme/ThemeContext';
 import styles from './NavBar.module.scss';
 
 const routes = [
@@ -16,6 +17,8 @@ const routes = [
 ];
 
 export function NavBar() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <nav className={styles.nav}>
       <NavLink to="/" className={styles.logo}>
@@ -36,6 +39,14 @@ export function NavBar() {
           </li>
         ))}
       </ul>
+      <button
+        className={styles.themeToggle}
+        onClick={toggleTheme}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+      >
+        {theme === 'dark' ? '☀' : '☾'}
+      </button>
     </nav>
   );
 }

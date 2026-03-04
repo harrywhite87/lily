@@ -9,7 +9,7 @@ import { useShaderConfig, WATER_DEFAULTS } from '../config/ShaderConfigContext';
 import type { WaterOverrides } from '../shaders/WaterSurface';
 import { SkyDome } from '../shaders/SkyDome';
 import { WaveSubmarine } from './WaveSubmarine';
-import styles from './WaterPage.module.scss';
+import { PageLayout } from '../layout/PageLayout';
 
 export function WaterPage() {
   const { config, setWater, downloadConfig, importConfig, resetAll } = useShaderConfig();
@@ -105,7 +105,7 @@ export function WaterPage() {
   const sunCycleSpeed = waterOverrides.sunCycleSpeed ?? config.water.sunCycleSpeed;
 
   return (
-    <div className={styles.page}>
+    <PageLayout background="var(--color-deep-navy)">
       <input
         ref={importRef}
         type="file"
@@ -145,6 +145,6 @@ export function WaterPage() {
         />
         <DebugOverlay />
       </Canvas>
-    </div>
+    </PageLayout>
   );
 }
