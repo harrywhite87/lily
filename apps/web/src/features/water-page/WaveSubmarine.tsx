@@ -9,6 +9,7 @@ import {
   sampleWaterHeight,
   sampleWaterNormal,
   type WaterOverrides,
+  type HullDebugInfo,
 } from '../shaders/WaterSurface';
 
 type GLTFResult = {
@@ -20,6 +21,7 @@ interface WaveSubmarineProps {
   overrides?: WaterOverrides;
   scale?: number;
   modelYawOffset?: number;
+  debugHull?: React.RefObject<HullDebugInfo | null>;
 }
 
 /* ─── Keyboard state helper ─── */
@@ -50,6 +52,7 @@ export function WaveSubmarine({
   overrides,
   scale = 0.5,
   modelYawOffset = -Math.PI / 2,
+  debugHull,
 }: WaveSubmarineProps) {
   const groupRef = useRef<THREE.Group>(null);
   const gltf = useGLTF(url) as unknown as GLTFResult;
@@ -88,10 +91,12 @@ export function WaveSubmarine({
         type: 'folder' as const,
         title: 'Wave Response',
         controls: {
-          hullRadius: { value: 2.0, min: 0.0, max: 8.0, step: 0.1 },
+          hullLength: { value: 4.0, min: 0.0, max: 12.0, step: 0.1 },
+          hullWidth: { value: 1.5, min: 0.0, max: 8.0, step: 0.1 },
           hullSamples: { value: 8, min: 4, max: 16, step: 1 },
           waveInfluence: { value: 1.0, min: 0.0, max: 2.0, step: 0.05 },
           verticalOffset: { value: 0.12, min: -1.0, max: 1.0, step: 0.01 },
+          showHullDebug: { value: false },
         },
       } satisfies FolderControl,
       '↺ Reset': { type: 'button' as const, label: '↺ Reset', onClick: doReset },
@@ -139,25 +144,30 @@ export function WaveSubmarine({
   );
 
   /**
-   * Sample wave height averaged over a ring of points (hull footprint).
-   * Returns the mean height across `samples` evenly-spaced points at `radius`
-   * from (cx, cz), plus the centre point itself.
+   * Sample wave height averaged over an elliptical hull footprint.
+   * Points are distributed on an ellipse (hullLength along heading,
+   * hullWidth across beam) plus the centre point.
    */
   const avgWaveHeight = useCallback(
-    (cx: number, cz: number, t: number, radius: number, samples: number) => {
+    (cx: number, cz: number, t: number, heading: number, hLen: number, hWid: number, samples: number) => {
       // Centre sample
       let sum = sampleWaterHeight(cx, cz, t, waveConfig);
       let count = 1;
-      if (radius > 0.01) {
+      const halfLen = hLen * 0.5;
+      const halfWid = hWid * 0.5;
+      if (halfLen > 0.01 || halfWid > 0.01) {
+        const cosH = Math.cos(heading);
+        const sinH = Math.sin(heading);
         const step = (Math.PI * 2) / samples;
         for (let i = 0; i < samples; i++) {
           const angle = i * step;
-          sum += sampleWaterHeight(
-            cx + Math.cos(angle) * radius,
-            cz + Math.sin(angle) * radius,
-            t,
-            waveConfig,
-          );
+          // Ellipse point in hull-local space
+          const lx = Math.cos(angle) * halfLen;
+          const ly = Math.sin(angle) * halfWid;
+          // Rotate into world space
+          const wx = cx + lx * cosH - ly * sinH;
+          const wz = cz + lx * sinH + ly * cosH;
+          sum += sampleWaterHeight(wx, wz, t, waveConfig);
           count++;
         }
       }
@@ -167,27 +177,26 @@ export function WaveSubmarine({
   );
 
   /**
-   * Sample wave normal averaged over the same hull footprint.
-   * Accumulates normals and normalizes the result.
+   * Sample wave normal averaged over the same elliptical hull footprint.
    */
   const avgWaveNormal = useCallback(
-    (cx: number, cz: number, t: number, radius: number, samples: number, target: THREE.Vector3) => {
-      // Centre normal
+    (cx: number, cz: number, t: number, heading: number, hLen: number, hWid: number, samples: number, target: THREE.Vector3) => {
       sampleWaterNormal(cx, cz, t, waveConfig, waveConfig.normalEpsilon, target);
       let nx = target.x, ny = target.y, nz = target.z;
       let count = 1;
-      if (radius > 0.01) {
+      const halfLen = hLen * 0.5;
+      const halfWid = hWid * 0.5;
+      if (halfLen > 0.01 || halfWid > 0.01) {
+        const cosH = Math.cos(heading);
+        const sinH = Math.sin(heading);
         const step = (Math.PI * 2) / samples;
         for (let i = 0; i < samples; i++) {
           const angle = i * step;
-          sampleWaterNormal(
-            cx + Math.cos(angle) * radius,
-            cz + Math.sin(angle) * radius,
-            t,
-            waveConfig,
-            waveConfig.normalEpsilon,
-            tmp.sampleNormal,
-          );
+          const lx = Math.cos(angle) * halfLen;
+          const ly = Math.sin(angle) * halfWid;
+          const wx = cx + lx * cosH - ly * sinH;
+          const wz = cz + lx * sinH + ly * cosH;
+          sampleWaterNormal(wx, wz, t, waveConfig, waveConfig.normalEpsilon, tmp.sampleNormal);
           nx += tmp.sampleNormal.x;
           ny += tmp.sampleNormal.y;
           nz += tmp.sampleNormal.z;
@@ -212,10 +221,12 @@ export function WaveSubmarine({
     const reverseRatio = (ctrl.reverseRatio as number) ?? 0.4;
     const turnRate = (ctrl.turnRate as number) ?? 1.8;
     const turnDecay = (ctrl.turnDecay as number) ?? 0.5;
-    const hullRadius = (ctrl.hullRadius as number) ?? 2.0;
+    const hullLength = (ctrl.hullLength as number) ?? 4.0;
+    const hullWidth = (ctrl.hullWidth as number) ?? 1.5;
     const hullSamples = Math.round((ctrl.hullSamples as number) ?? 8);
     const waveInfluence = (ctrl.waveInfluence as number) ?? 1.0;
     const verticalOffset = (ctrl.verticalOffset as number) ?? 0.12;
+    const showHullDebug = (ctrl.showHullDebug as boolean) ?? false;
 
     /* ── Handle reset ── */
     if (resetRef.current) {
@@ -230,7 +241,7 @@ export function WaveSubmarine({
     /* ── Delta time ── */
     const wallTime = clock.getElapsedTime();
     if (lastWallRef.current === null) lastWallRef.current = wallTime;
-    const dt = Math.min(wallTime - lastWallRef.current, 0.1); // clamp to avoid huge jumps
+    const dt = Math.min(wallTime - lastWallRef.current, 0.1);
     lastWallRef.current = wallTime;
     accTimeRef.current += dt;
     const t = accTimeRef.current;
@@ -255,7 +266,6 @@ export function WaveSubmarine({
       vel -= acceleration * dt;
       if (vel < maxReverse) vel = maxReverse;
     } else {
-      // Coast to stop (drag)
       if (vel > 0) {
         vel -= deceleration * dt;
         if (vel < 0) vel = 0;
@@ -273,39 +283,48 @@ export function WaveSubmarine({
 
     /* ── Integrate position ── */
     const heading = headingRef.current;
-    const dirX = Math.cos(heading);
-    const dirZ = Math.sin(heading);
+
+    // The model mesh's bow (native +X in the GLB) is mapped via modelFix
+    // to the basis forwardOrtho axis. This creates a -π/2 offset between
+    // the raw heading angle and the model's visual forward direction.
+    // Movement must follow the model's visual forward, not the raw heading.
+    const dirX = Math.sin(heading);
+    const dirZ = -Math.cos(heading);
 
     const pos = posRef.current;
     pos.x += dirX * vel * dt;
     pos.z += dirZ * vel * dt;
 
-    /* ── Hull-averaged wave height ── */
-    // Sample across the hull footprint and average — a large hullRadius
-    // naturally smooths out small waves (big vessel), while a small radius
-    // lets every ripple through (small boat).
-    const avgHeight = avgWaveHeight(pos.x, pos.z, t, hullRadius, hullSamples);
+    // Hull sampling heading matches the model's visual orientation
+    const hullHeading = heading + modelYawOffset;
+
+    /* ── Hull-averaged wave height (elliptical footprint) ── */
+    const avgHeight = avgWaveHeight(pos.x, pos.z, t, hullHeading, hullLength, hullWidth, hullSamples);
     const baseWaterLevel = -waveConfig.waveDepth;
-    // waveInfluence blends from flat baseline to averaged wave surface
     const waveY = THREE.MathUtils.lerp(baseWaterLevel, avgHeight, waveInfluence) + verticalOffset;
     pos.y = waveY;
 
     /* ── Hull-averaged normal (orientation) ── */
-    avgWaveNormal(pos.x, pos.z, t, hullRadius, hullSamples, tmp.up);
+    avgWaveNormal(pos.x, pos.z, t, hullHeading, hullLength, hullWidth, hullSamples, tmp.up);
 
     // Blend averaged normal towards world-up via waveInfluence
     tmp.blendedUp.copy(tmp.worldUp).lerp(tmp.up, Math.min(waveInfluence, 1.0)).normalize();
 
-    // Look-ahead for pitch (also hull-averaged)
-    const lookAheadDist = Math.max(0.12, hullRadius * 0.5);
+    /* ── Build orientation: heading drives yaw, wave normal drives pitch/roll ── */
+    // Basis forward uses the movement direction so pitch aligns with travel
+    tmp.forward.set(dirX, 0, dirZ);
+
+    // Pitch: tilt forward along wave slope in movement direction
+    const lookAheadDist = Math.max(0.12, hullLength * 0.25);
     const x2 = pos.x + dirX * lookAheadDist;
     const z2 = pos.z + dirZ * lookAheadDist;
-    const avgHeight2 = avgWaveHeight(x2, z2, t, hullRadius, hullSamples);
+    const avgHeight2 = avgWaveHeight(x2, z2, t, hullHeading, hullLength, hullWidth, hullSamples);
     const waveY2 = THREE.MathUtils.lerp(baseWaterLevel, avgHeight2, waveInfluence) + verticalOffset;
-    tmp.nextPos.set(x2, waveY2, z2);
+    const pitchSlope = (waveY2 - waveY) / lookAheadDist;
+    tmp.forward.y = pitchSlope;
+    tmp.forward.normalize();
 
-    // Forward = direction of travel projected along surface
-    tmp.forward.copy(tmp.nextPos).sub(pos).normalize();
+    // Build orthonormal basis: right, blendedUp, forwardOnSurface
     tmp.right.copy(tmp.forward).cross(tmp.blendedUp).normalize();
     tmp.forwardOrtho.copy(tmp.blendedUp).cross(tmp.right).normalize();
 
@@ -320,6 +339,18 @@ export function WaveSubmarine({
     // Subtle hull roll when turning
     const rollAmount = -steer * speedFrac * 0.08;
     group.rotateOnAxis(tmp.forwardOrtho, rollAmount);
+
+    /* ── Write hull debug data for shader overlay ── */
+    if (debugHull?.current !== undefined) {
+      const info = debugHull.current;
+      if (info) {
+        info.center.set(pos.x, pos.z);
+        info.length = hullLength;
+        info.width = hullWidth;
+        info.heading = hullHeading;
+        info.show = showHullDebug;
+      }
+    }
   });
 
   return (

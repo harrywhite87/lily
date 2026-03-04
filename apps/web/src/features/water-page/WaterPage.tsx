@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { WaterSurface } from '../shaders/WaterSurface';
 import { useShaderConfig, WATER_DEFAULTS } from '../config/ShaderConfigContext';
 import type { WaterOverrides } from '../shaders/WaterSurface';
+import { type HullDebugInfo } from '../shaders/WaterSurface';
 import { SkyDome } from '../shaders/SkyDome';
 import { WaveSubmarine } from './WaveSubmarine';
 import { PageLayout } from '../layout/PageLayout';
@@ -14,6 +15,15 @@ import { PageLayout } from '../layout/PageLayout';
 export function WaterPage() {
   const { config, setWater, downloadConfig, importConfig, resetAll } = useShaderConfig();
   const importRef = useRef<HTMLInputElement>(null);
+
+  /* shared ref: WaveSubmarine writes, WaterSurface reads each frame */
+  const hullDebugRef = useRef<HullDebugInfo>({
+    center: new THREE.Vector2(0, 0),
+    length: 0,
+    width: 0,
+    heading: 0,
+    show: false,
+  });
 
   const handleImport = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -132,8 +142,8 @@ export function WaterPage() {
           />
           <ambientLight intensity={0.25} />
           <directionalLight position={[5, 10, 5]} intensity={0.5} />
-          <WaterSurface standalone overrides={waterOverrides} />
-          <WaveSubmarine overrides={waterOverrides} />
+          <WaterSurface standalone overrides={waterOverrides} debugHull={hullDebugRef} />
+          <WaveSubmarine overrides={waterOverrides} debugHull={hullDebugRef} />
         </Suspense>
         <OrbitControls
           makeDefault

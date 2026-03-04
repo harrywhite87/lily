@@ -185,6 +185,7 @@ function DetachedInspector({
       className={styles.detached}
       style={{ left: panel.x, top: panel.y, zIndex: 10010 + stackIndex }}
       onPointerDown={() => bringFloatingInspectorToFront(panel.uuid)}
+      onKeyDown={(event) => event.stopPropagation()}
       onWheel={(event) => event.stopPropagation()}
     >
       <div
@@ -340,6 +341,7 @@ export function DebugOverlay({
                 : null),
             }}
             onPointerDown={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
             onWheel={(event) => event.stopPropagation()}
           >
             <div

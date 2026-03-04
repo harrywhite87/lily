@@ -98,7 +98,6 @@ export function ObjectInspectorPanel({
   const surfaceRef = useRef<ObjectInspectorSurface | null>(null);
   const rafRef = useRef<number>(0);
   const editingRef = useRef<string | null>(null);
-  const shiftPressedRef = useRef(false);
 
   const activateObject = useCallback(() => {
     if (!focusOnInteract || !objectUuid) return;
@@ -179,30 +178,7 @@ export function ObjectInspectorPanel({
     return () => cancelAnimationFrame(rafRef.current);
   }, [objectUuid]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Shift') {
-        shiftPressedRef.current = true;
-      }
-    };
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Shift') {
-        shiftPressedRef.current = false;
-      }
-    };
-    const onWindowBlur = () => {
-      shiftPressedRef.current = false;
-    };
 
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    window.addEventListener('blur', onWindowBlur);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('blur', onWindowBlur);
-    };
-  }, []);
 
   const handlePosChange = useCallback(
     (axis: number, value: number) => {
@@ -281,13 +257,7 @@ export function ObjectInspectorPanel({
       if (!obj) return;
       activateObject();
       const arr: Vec3 = [obj.scale.x, obj.scale.y, obj.scale.z];
-      if (shiftPressedRef.current) {
-        arr[0] = value;
-        arr[1] = value;
-        arr[2] = value;
-      } else {
-        arr[axis] = value;
-      }
+      arr[axis] = value;
       obj.scale.set(arr[0], arr[1], arr[2]);
       setScale(arr);
     },
@@ -316,6 +286,30 @@ export function ObjectInspectorPanel({
 
   const AXES = ['X', 'Y', 'Z'] as const;
   const AXIS_CLASSES = [styles.axisX, styles.axisY, styles.axisZ];
+
+  /** Arrow-key step based on modifier keys */
+  function getArrowStep(e: React.KeyboardEvent): number | null {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return null;
+    const dir = e.key === 'ArrowUp' ? 1 : -1;
+    if (e.shiftKey) return dir * 100;
+    if (e.ctrlKey || e.metaKey) return dir * 10;
+    if (e.altKey) return dir * 0.1;
+    return dir * 1;
+  }
+
+  function makeInputKeyDown(
+    currentValue: number,
+    onChange: (v: number) => void,
+  ) {
+    return (e: React.KeyboardEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      const step = getArrowStep(e);
+      if (step !== null) {
+        e.preventDefault();
+        onChange(currentValue + step);
+      }
+    };
+  }
   const customSurface = surfaceRef.current;
 
   return (
@@ -350,6 +344,7 @@ export function ObjectInspectorPanel({
                 onChange={(e) =>
                   handlePosChange(i, parseFloat(e.target.value) || 0)
                 }
+                onKeyDown={makeInputKeyDown(pos[i], (v) => handlePosChange(i, v))}
               />
             </div>
           ))}
@@ -379,6 +374,7 @@ export function ObjectInspectorPanel({
                 onChange={(e) =>
                   handleRotChange(i, parseFloat(e.target.value) || 0)
                 }
+                onKeyDown={makeInputKeyDown(rotDeg[i], (v) => handleRotChange(i, v))}
               />
             </div>
           ))}
@@ -386,7 +382,7 @@ export function ObjectInspectorPanel({
       </div>
 
       <div className={styles.section}>
-        <div className={styles.sectionLabel}>Scale (Shift = all axes)</div>
+        <div className={styles.sectionLabel}>Scale</div>
         <div className={styles.row}>
           {AXES.map((axis, i) => (
             <div key={axis} className={styles.field}>
@@ -408,6 +404,7 @@ export function ObjectInspectorPanel({
                 onChange={(e) =>
                   handleScaleChange(i, parseFloat(e.target.value) || 0)
                 }
+                onKeyDown={makeInputKeyDown(scale[i], (v) => handleScaleChange(i, v))}
               />
             </div>
           ))}

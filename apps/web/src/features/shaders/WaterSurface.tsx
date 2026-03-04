@@ -226,6 +226,13 @@ uniform float uFogStrength;
 uniform vec3 uFogColor;
 uniform float uOpacity;
 
+/* ── Hull sampling debug overlay ── */
+uniform vec2 uDebugHullCenter;
+uniform float uDebugHullLength;
+uniform float uDebugHullWidth;
+uniform float uDebugHullHeading;
+uniform float uDebugHullShow;
+
 varying vec3 vWorldPos;
 
 #define DRAG_MULT 0.38
@@ -363,6 +370,29 @@ void main() {
   C = mix(C, fogTarget, fogFactor * uFogStrength);
   C = aces_tonemap(C * uExposure);
 
+  /* ── Hull sampling debug overlay (ellipse) ── */
+  if (uDebugHullShow > 0.5 && (uDebugHullLength + uDebugHullWidth) > 0.0) {
+    // Rotate fragment offset into hull-local space
+    vec2 offset = vWorldPos.xz - uDebugHullCenter;
+    float ch = cos(-uDebugHullHeading);
+    float sh = sin(-uDebugHullHeading);
+    vec2 local = vec2(offset.x * ch - offset.y * sh, offset.x * sh + offset.y * ch);
+
+    // Half-axes: length along sub's forward, width across beam
+    float hl = max(uDebugHullLength, 0.01) * 0.5;
+    float hw = max(uDebugHullWidth, 0.01) * 0.5;
+
+    // Normalised ellipse distance (1.0 = on the edge)
+    float ed = (local.x * local.x) / (hl * hl) + (local.y * local.y) / (hw * hw);
+
+    // Solid fill inside
+    float inner = smoothstep(1.15, 0.9, ed);
+    // Bright ring on the edge
+    float ring = smoothstep(0.25, 0.0, abs(ed - 1.0));
+    vec3 pink = vec3(1.0, 0.2, 0.6);
+    C = mix(C, pink, inner * 0.35 + ring * 0.7);
+  }
+
   float alpha = smoothstep(0.0, 0.3, uProgressArea3) * uOpacity;
   gl_FragColor = vec4(C, alpha);
 }
@@ -390,6 +420,11 @@ const WaterMaterial = shaderMaterial(
     uFogStrength: WATER_OVERRIDE_DEFAULTS.fogStrength,
     uFogColor: new THREE.Color('#8fb8cf'),
     uOpacity: 0.9,
+    uDebugHullCenter: new THREE.Vector2(0, 0),
+    uDebugHullLength: 0,
+    uDebugHullWidth: 0,
+    uDebugHullHeading: 0,
+    uDebugHullShow: 0,
   },
   waterVertexShader,
   waterFragmentShader,
@@ -420,13 +455,28 @@ declare module '@react-three/fiber' {
       uFogStrength?: number;
       uFogColor?: THREE.Color;
       uOpacity?: number;
+      uDebugHullCenter?: THREE.Vector2;
+      uDebugHullLength?: number;
+      uDebugHullWidth?: number;
+      uDebugHullHeading?: number;
+      uDebugHullShow?: number;
     };
   }
+}
+
+/** Live hull-debug data written by WaveSubmarine each frame. */
+export interface HullDebugInfo {
+  center: THREE.Vector2;
+  length: number;
+  width: number;
+  heading: number;
+  show: boolean;
 }
 
 interface WaterSurfaceProps {
   standalone?: boolean;
   overrides?: WaterOverrides;
+  debugHull?: React.RefObject<HullDebugInfo | null>;
 }
 
 function applyMaterialConfig(
@@ -462,7 +512,25 @@ function applyMaterialConfig(
   mat.uniforms.uOpacity.value = standalone ? 1.0 : 0.9;
 }
 
-export function WaterSurface({ standalone = false, overrides }: WaterSurfaceProps) {
+function applyDebugHull(
+  materialRef: RefObject<THREE.ShaderMaterial>,
+  debugHull?: React.RefObject<HullDebugInfo | null>,
+) {
+  const mat = materialRef.current;
+  if (!mat) return;
+  const info = debugHull?.current;
+  if (info && info.show) {
+    mat.uniforms.uDebugHullCenter.value.copy(info.center);
+    mat.uniforms.uDebugHullLength.value = info.length;
+    mat.uniforms.uDebugHullWidth.value = info.width;
+    mat.uniforms.uDebugHullHeading.value = info.heading;
+    mat.uniforms.uDebugHullShow.value = 1.0;
+  } else {
+    mat.uniforms.uDebugHullShow.value = 0.0;
+  }
+}
+
+export function WaterSurface({ standalone = false, overrides, debugHull }: WaterSurfaceProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null!);
   const scrollProgress = standalone ? null : useScrollProgress();
   const c = standalone ? 1.0 : scrollProgress!.c;
@@ -487,6 +555,7 @@ export function WaterSurface({ standalone = false, overrides }: WaterSurfaceProp
           exposure: 1.8 + c * 0.22,
         };
     applyMaterialConfig(materialRef, resolveWaterOverrides(overrides ?? fallback), c, standalone, time);
+    applyDebugHull(materialRef, debugHull);
   });
 
   const meshPos: [number, number, number] = standalone ? [0, 0, 0] : [7.5, -1.5, -2.0];
