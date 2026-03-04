@@ -183,7 +183,7 @@ export function ControlsPanel() {
   }
 
   return (
-    <div style={{ maxHeight: 400, overflow: 'auto', paddingRight: 4 }}>
+    <div>
       {sorted.map((reg, i) => (
         <div key={reg.id}>
           {i > 0 && <div className={styles.divider} />}
