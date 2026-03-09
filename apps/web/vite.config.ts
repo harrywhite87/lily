@@ -57,6 +57,10 @@ export default defineConfig({
         __dirname,
         '../../libs/three/fusion-reactor-demo/src',
       ),
+      '@lilypad/three-plasma-toroid-demo': path.resolve(
+        __dirname,
+        '../../libs/three/plasma-toroid-demo/src',
+      ),
     },
   },
   css: {

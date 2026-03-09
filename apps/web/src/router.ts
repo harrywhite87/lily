@@ -14,6 +14,7 @@ import { BattleboardPage } from './features/battleboard/BattleboardPage';
 import { ParticleCloudDemoPage } from './features/particle-cloud-demo/ParticleCloudDemoPage';
 import { SwarmDemoPage } from './features/swarm-demo/SwarmDemoPage';
 import { FusionReactorDemoPage } from './features/fusion-reactor/FusionReactorDemoPage';
+import { PlasmaToroidDemoPage } from './features/plasma-toroid/PlasmaToroidDemoPage';
 
 /* ───────────────────────── types ──────────────────────────────── */
 export interface RouteEntry {
@@ -58,6 +59,7 @@ export const routes: RouteEntry[] = [
   { path: '/particle-clouds',  label: 'Clouds',      component: ParticleCloudDemoPage },
   { path: '/swarm',            label: 'Swarm',       component: SwarmDemoPage },
   { path: '/fusion-reactor',   label: 'Reactor',     component: FusionReactorDemoPage },
+  { path: '/plasma-toroid',    label: 'Toroid',      component: PlasmaToroidDemoPage },
 ];
 
 /* ───────────────────────── helpers ────────────────────────────── */

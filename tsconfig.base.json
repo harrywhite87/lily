@@ -45,6 +45,9 @@
       "@lilypad/three-scroll-scene": [
         "libs/three/scroll-scene/src/index.ts"
       ],
+      "@lilypad/three-plasma-toroid-demo": [
+        "libs/three/plasma-toroid-demo/src/index.ts"
+      ],
       "@lilypad/form-elements": ["libs/ui/form-elements/src/index.ts"]
     }
   },
