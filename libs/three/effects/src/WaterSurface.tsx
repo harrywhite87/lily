@@ -1,4 +1,4 @@
-import { useMemo, useRef, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame, extend, type ThreeElements } from '@react-three/fiber';
 import { shaderMaterial } from '@react-three/drei';
 import { useScrollProgress } from '@lilypad/scroll';
@@ -45,6 +45,7 @@ export const WATER_OVERRIDE_DEFAULTS: Required<WaterOverrides> = {
 export const WATER_DRAG_MULT = 0.38;
 const ITER_WAVES_VERTEX = 18;
 const ITER_WAVES_NORMAL = 28;
+export type ResolvedWaterOverrides = Required<WaterOverrides>;
 
 export function resolveWaterOverrides(overrides?: WaterOverrides): Required<WaterOverrides> {
   return {
@@ -67,14 +68,13 @@ function sampleWave(
   return { wave, deriv };
 }
 
-export function sampleWaterWaves(
+function sampleWaterWavesResolved(
   x: number,
   z: number,
   time: number,
-  wave: WaterOverrides,
+  cfg: ResolvedWaterOverrides,
   iterations = ITER_WAVES_NORMAL,
 ) {
-  const cfg = resolveWaterOverrides(wave);
   let posX = x * cfg.waveScale;
   let posZ = z * cfg.waveScale;
   const drag = WATER_DRAG_MULT * cfg.waveDrag;
@@ -115,9 +115,52 @@ export function sampleWaterWaves(
   return sumOfValues / Math.max(sumOfWeights, 1e-6);
 }
 
-export function sampleWaterHeight(x: number, z: number, time: number, wave: WaterOverrides) {
-  const cfg = resolveWaterOverrides(wave);
-  return sampleWaterWaves(x, z, time, cfg, ITER_WAVES_NORMAL) * cfg.waveDepth - cfg.waveDepth;
+export function sampleWaterWaves(
+  x: number,
+  z: number,
+  time: number,
+  wave: WaterOverrides,
+  iterations = ITER_WAVES_NORMAL,
+) {
+  return sampleWaterWavesResolved(x, z, time, resolveWaterOverrides(wave), iterations);
+}
+
+export function sampleWaterHeightResolved(
+  x: number,
+  z: number,
+  time: number,
+  cfg: ResolvedWaterOverrides,
+  iterations = ITER_WAVES_VERTEX,
+) {
+  return sampleWaterWavesResolved(x, z, time, cfg, iterations) * cfg.waveDepth - cfg.waveDepth;
+}
+
+export function sampleWaterHeight(
+  x: number,
+  z: number,
+  time: number,
+  wave: WaterOverrides,
+  iterations = ITER_WAVES_VERTEX,
+) {
+  return sampleWaterHeightResolved(x, z, time, resolveWaterOverrides(wave), iterations);
+}
+
+export function sampleWaterNormalResolved(
+  x: number,
+  z: number,
+  time: number,
+  cfg: ResolvedWaterOverrides,
+  epsilon = WATER_OVERRIDE_DEFAULTS.normalEpsilon,
+  target = new THREE.Vector3(),
+  iterations = ITER_WAVES_VERTEX,
+) {
+  const e = Math.max(epsilon, 0.001);
+  const h = sampleWaterHeightResolved(x, z, time, cfg, iterations);
+  const hx = sampleWaterHeightResolved(x + e, z, time, cfg, iterations);
+  const hz = sampleWaterHeightResolved(x, z + e, time, cfg, iterations);
+
+  target.set(-(hx - h) / e, 1.0, -(hz - h) / e);
+  return target.normalize();
 }
 
 export function sampleWaterNormal(
@@ -127,15 +170,17 @@ export function sampleWaterNormal(
   wave: WaterOverrides,
   epsilon = WATER_OVERRIDE_DEFAULTS.normalEpsilon,
   target = new THREE.Vector3(),
+  iterations = ITER_WAVES_VERTEX,
 ) {
-  const cfg = resolveWaterOverrides(wave);
-  const e = Math.max(epsilon, 0.001);
-  const h = sampleWaterHeight(x, z, time, cfg);
-  const hx = sampleWaterHeight(x + e, z, time, cfg);
-  const hz = sampleWaterHeight(x, z + e, time, cfg);
-
-  target.set(-(hx - h) / e, 1.0, -(hz - h) / e);
-  return target.normalize();
+  return sampleWaterNormalResolved(
+    x,
+    z,
+    time,
+    resolveWaterOverrides(wave),
+    epsilon,
+    target,
+    iterations,
+  );
 }
 
 const waterVertexShader = /* glsl */ `
@@ -389,8 +434,12 @@ void main() {
     float inner = smoothstep(1.15, 0.9, ed);
     // Bright ring on the edge
     float ring = smoothstep(0.25, 0.0, abs(ed - 1.0));
-    vec3 pink = vec3(1.0, 0.2, 0.6);
-    C = mix(C, pink, inner * 0.35 + ring * 0.7);
+    // Green = front (bow), Pink = back (stern)
+    vec3 bowColor = vec3(0.2, 1.0, 0.4);
+    vec3 sternColor = vec3(1.0, 0.2, 0.6);
+    float bowMix = smoothstep(-0.15, 0.15, local.x); // 1 at bow, 0 at stern
+    vec3 hullColor = mix(sternColor, bowColor, bowMix);
+    C = mix(C, hullColor, inner * 0.35 + ring * 0.7);
   }
 
   float alpha = smoothstep(0.0, 0.3, uProgressArea3) * uOpacity;
@@ -541,6 +590,8 @@ export function WaterSurface({ standalone = false, overrides, debugHull }: Water
     }
     return new THREE.PlaneGeometry(28, 22, 220, 180);
   }, [standalone]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(({ clock }) => {
     const time = clock.getElapsedTime();

@@ -1,4 +1,4 @@
-/* ── Canonical Button — libs/ui ── */
+/* ── Canonical Button — libs/ui/form-elements ── */
 
 /* ── Base ── */
 .button {
@@ -17,485 +17,106 @@
   }
 }
 
-.secondary {
-  --height-button: 0;
-  background: radial-gradient(#ffffff 50%, #555050 80%, #000000 100%);
-  --color-recess: #000000;
-  box-shadow:
-    inset 0 1px 0 rgba(0, 0, 0, 0.11),
-    inset 1px 0 0 rgba(0, 0, 0, 0.05),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.52),
-    inset -1px 0 0 rgba(255, 255, 255, 0.18),
-    inset 0 2px 3px rgba(0, 0, 0, 0.025) !important;
-  .inner {
-    border-radius: 3px;
-    box-shadow:
-      inset 0 0px 2px 0px rgb(0 0 0 / 29%),
-      0 0px 3px 0px rgba(0, 0, 0, 0.168627451) !important;
-    background-image: url(https://assets.codepen.io/4175254/ep-133-noise.png);
-  }
-}
-
-/* ── Recessed modifier — adds keycap housing ── */
-.recessed {
-  padding: 1px;
-  border-radius: var(--keycap-border-radius, 6px);
-  background: radial-gradient(#ffffff 50%, #00000075 82%, #000000 105%);
-  box-shadow: var(--keycap-housing-shadow, 0 1px 3px #000a);
-}
-
-/* ── Inner ── */
+/* ── Inner — content wrapper ── */
 .inner {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   white-space: nowrap;
-  justify-content: var(--justify-content, center);
-  min-width: 46px;
-  min-height: 42px;
-  gap: 0.4em;
-  position: relative;
+  gap: 0.5em;
   width: 100%;
   height: 100%;
-
-  border-radius: 6px;
-  padding: 0 0.85em;
-
-  /* height drives the entire bezel + drop-shadow illusion */
-  --_bevel: calc(var(--height-button) * 0.5);
-  --_drop: var(--height-button);
-  --_drop-blur: calc(var(--height-button) * 2);
-
-  --bg: var(--keycap-white, #e8e4de);
-  --bg-active: var(--keycap-white-active, #ccc8c2);
-  --shadow-hi: var(--keycap-white-light, #f5f2ee);
-  --shadow-lo: var(--keycap-white-dark, #a09b94);
-  --fg: var(--keycap-housing-bg, #1a1a1a);
-
-  background-color: var(--bg);
-  background-image: var(--keycap-noise-url, none);
-  background-size: var(--keycap-noise-size, auto);
-  box-shadow:
-    inset var(--_bevel) var(--_bevel) var(--_bevel) var(--shadow-hi),
-    inset calc(var(--_bevel) * -1) calc(var(--_bevel) * -1) var(--_bevel)
-      var(--shadow-lo),
-    var(--_drop) var(--_drop) var(--_drop-blur) #000;
-
-  color: var(--fg);
-  font-family: var(--font-hardware, inherit);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  border-radius: var(--radius-300, 4px);
+  padding: 0.5em 1em;
+  font-family: var(--font-family-body, 'Noto Sans', sans-serif);
+  font-style: normal;
+  font-weight: var(--font-weight-medium, 500);
+  line-height: var(--line-height-tight, 1.2);
   user-select: none;
-
-  // transition-property: transform, background-color, box-shadow;
-  // transition-duration: 0.2s;
-  // transition-timing-function: cubic-bezier(0.25, 0.5, 0.5, 1);
- --_bevel
-: 
-"calc(0.125em * 0.5)"
---_drop
-: 
-"0.125em"
---_drop-blur
-: 
-"calc(0.125em * 2)"
---bg
-: 
-"#e8e4de"
---bg-active
-: 
-"#ccc8c2"
---border-bottom
-: 
-"none"
---border-right
-: 
-"none"
---fg
-: 
-"#010101"
---grid-cols
-: 
-"6"
---grid-gap
-: 
-"14px"
---grid-half-gap
-: 
-"calc(14px / 2)"
---grid-inset-diff
-: 
-"calc(calc(14px / 2) - 2px)"
---grid-inset-edge
-: 
-"calc(calc(14px / 2) + 2px)"
---grid-inset-same
-: 
-"calc(14px / 2)"
---grid-tile-size
-: 
-"92px"
---inset-bottom
-: 
-"calc(-1 * calc(14px / 2))"
---inset-left
-: 
-"calc(-1 * calc(calc(14px / 2) + 2px))"
---inset-right
-: 
-"calc(-1 * calc(14px / 2))"
---inset-top
-: 
-"calc(-1 * calc(calc(14px / 2) + 2px))"
---radius-bl
-: 
-"0"
---radius-br
-: 
-"0"
---radius-tr
-: 
-"0"
---shadow-hi
-: 
-"#f5f2ee"
---shadow-lo
-: 
-"#a09b94"
---spacing
-: 
-"14px"
--webkit-text-fill-color
-: 
-"rgb(1, 1, 1)"
--webkit-text-stroke-color
-: 
-"rgb(1, 1, 1)"
-align-items
-: 
-"flex-start"
-background-color
-: 
-"rgb(232, 228, 222)"
-background-image
-: 
-"url(\"https://assets.codepen.io/4175254/ep-133-noise.png\")"
-background-size
-: 
-"80px 80px"
-block-size
-: 
-"90px"
-border-block-end-color
-: 
-"rgb(1, 1, 1)"
-border-block-start-color
-: 
-"rgb(1, 1, 1)"
-border-bottom-color
-: 
-"rgb(1, 1, 1)"
-border-bottom-left-radius
-: 
-"6px"
-border-bottom-right-radius
-: 
-"6px"
-border-end-end-radius
-: 
-"6px"
-border-end-start-radius
-: 
-"6px"
-border-inline-end-color
-: 
-"rgb(1, 1, 1)"
-border-inline-start-color
-: 
-"rgb(1, 1, 1)"
-border-left-color
-: 
-"rgb(1, 1, 1)"
-border-right-color
-: 
-"rgb(1, 1, 1)"
-border-start-end-radius
-: 
-"6px"
-border-start-start-radius
-: 
-"6px"
-border-top-color
-: 
-"rgb(1, 1, 1)"
-border-top-left-radius
-: 
-"6px"
-border-top-right-radius
-: 
-"6px"
-bottom
-: 
-"0px"
-box-shadow
-: 
-"rgb(245, 242, 238) 1px 1px 1px 0px inset, rgb(160, 155, 148) -1px -1px 1px 0px inset, rgb(0, 0, 0) 2px 2px 4px 0px"
-caret-color
-: 
-"rgb(1, 1, 1)"
-color
-: 
-"rgb(1, 1, 1)"
-column-gap
-: 
-"6.4px"
-column-rule-color
-: 
-"rgb(1, 1, 1)"
-cursor
-: 
-"pointer"
-display
-: 
-"flex"
-font-family
-: 
-"\"Noto Sans\", sans-serif"
-height
-: 
-"90px"
-inline-size
-: 
-"92px"
-inset-block-end
-: 
-"0px"
-inset-block-start
-: 
-"0px"
-inset-inline-end
-: 
-"0px"
-inset-inline-start
-: 
-"0px"
-justify-content
-: 
-"flex-start"
-left
-: 
-"0px"
-letter-spacing
-: 
-"0.8px"
-min-block-size
-: 
-"42px"
-min-height
-: 
-"42px"
-min-inline-size
-: 
-"46px"
-min-width
-: 
-"46px"
-outline-color
-: 
-"rgb(1, 1, 1)"
-padding-block-end
-: 
-"10px"
-padding-block-start
-: 
-"10px"
-padding-bottom
-: 
-"10px"
-padding-inline-end
-: 
-"8px"
-padding-inline-start
-: 
-"8px"
-padding-left
-: 
-"8px"
-padding-right
-: 
-"8px"
-padding-top
-: 
-"10px"
-perspective-origin
-: 
-"46px 45px"
-position
-: 
-"relative"
-right
-: 
-"0px"
-row-gap
-: 
-"6.4px"
-text-align
-: 
-"left"
-text-decoration-color
-: 
-"rgb(1, 1, 1)"
-text-emphasis-color
-: 
-"rgb(1, 1, 1)"
-text-transform
-: 
-"uppercase"
-top
-: 
-"0px"
-transform-origin
-: 
-"46px 45px"
-transition-duration
-: 
-"0.2s"
-transition-property
-: 
-"transform, background-color, box-shadow"
-transition-timing-function
-: 
-"cubic-bezier(0.25, 0.5, 0.5, 1)"
-user-select
-: 
-"none"
-width
-: 
-"92px" 
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
-.button:active .inner {
-  --height-button: 0;
+
+/* ── Primary variant (default) ── */
+.variantPrimary .inner {
+  background-color: var(--color-neutral-300, #c0bdb8);
+  color: var(--color-neutral-900, #000);
+  border: 1px solid transparent;
+}
+
+.variantPrimary:hover:not(:disabled) .inner {
+  background-color: var(--color-neutral-600, #706e6b);
+}
+
+.variantPrimary:active:not(:disabled) .inner {
+  background-color: var(--color-neutral-700, #504f4c);
   transform: scale(0.98);
-  background-color: var(--bg-active);
-  box-shadow:
-    inset 0 0 0.25em #000,
-    inset var(--_bevel) var(--_bevel) var(--_bevel) transparent,
-    inset calc(var(--_bevel) * -1) calc(var(--_bevel) * -1) var(--_bevel)
-      transparent,
-    var(--_drop) var(--_drop) var(--_drop-blur) transparent;
 }
 
-/* ── Ghost variant — transparent inner ── */
-.variantGhost {
-  .inner {
-    background-color: transparent;
-    box-shadow: none;
-    text-transform: none;
-    color: var(--color-text, inherit);
-  }
-
-  &:active .inner {
-    transform: scale(0.97);
-    background-color: transparent;
-    box-shadow: none;
-  }
+.variantPrimary:focus-visible .inner {
+  box-shadow: 0 0 0 2px var(--color-surface, #fafafa),
+              0 0 0 4px var(--color-focus-ring, var(--color-primary-500));
 }
 
-/* ── Colors ── */
-.colorOrange .inner {
-  --bg: var(--keycap-orange, #d4621a);
-  --bg-active: var(--keycap-orange-active, #b04e11);
-  --shadow-hi: var(--keycap-orange-light, #e8894d);
-  --shadow-lo: var(--keycap-orange-dark, #7e3208);
-  --fg: #fff;
+/* ── Secondary variant — outlined ── */
+.variantSecondary .inner {
+  background-color: transparent;
+  color: var(--color-neutral-900, #111110);
+  border: 1px solid var(--color-neutral-900, #111110);
 }
-.colorDarkGray .inner {
-  --bg: var(--keycap-darkgray, #2e2e2e);
-  --bg-active: var(--keycap-darkgray-active, #1f1f1f);
-  --shadow-hi: var(--keycap-darkgray-light, #4a4a4a);
-  --shadow-lo: var(--keycap-darkgray-dark, #0f0f0f);
-  --fg: #e0e0e0;
+
+.variantSecondary:hover:not(:disabled) .inner {
+  background-color: var(--color-neutral-100, #f1f0ef);
+  color: var(--color-neutral-900, #111110);
+  border-color: var(--color-neutral-900, #111110);
 }
-.colorGray .inner {
-  --bg: var(--keycap-gray, #4a4a4a);
-  --bg-active: var(--keycap-gray-active, #373737);
-  --shadow-hi: var(--keycap-gray-light, #636363);
-  --shadow-lo: var(--keycap-gray-dark, #252525);
-  --fg: #e0e0e0;
+
+.variantSecondary:active:not(:disabled) .inner {
+  background-color: var(--color-neutral-200, #bfdbfe);
+  transform: scale(0.98);
 }
-.colorLightGray .inner {
-  --bg: var(--keycap-lightgray, #c0bdb8);
-  --bg-active: var(--keycap-lightgray-active, #a9a6a1);
-  --shadow-hi: var(--keycap-lightgray-light, #d8d5d0);
-  --shadow-lo: var(--keycap-lightgray-dark, #88827c);
-  --fg: var(--keycap-housing-bg, #1a1a1a);
+
+.variantSecondary:focus-visible .inner {
+  box-shadow: 0 0 0 2px var(--color-surface, #fafafa),
+              0 0 0 4px var(--color-focus-ring, var(--color-neutral-500));
 }
-.colorWhite .inner {
-  --bg: var(--keycap-white, #f5f4f2);
-  --bg-active: var(--keycap-white-active, #ccc8c2);
-  --shadow-hi: var(--keycap-white-light, #f5f2ee);
-  --shadow-lo: var(--keycap-white-dark, #a09b94);
-  --fg: var(--keycap-housing-bg, #1a1a1a);
+
+/* ── Ghost variant — minimal ── */
+.variantGhost .inner {
+  background-color: transparent;
+  color: var(--color-text, inherit);
+  border: 1px solid transparent;
 }
-.colorRed .inner {
-  --bg: var(--keycap-red, #ff1201);
-  --bg-active: var(--keycap-red-active, #ff4c01);
-  --shadow-hi: var(--keycap-red-light, #ff4c01);
-  --shadow-lo: var(--keycap-red-dark, #ff4c01);
-  --fg: #fff;
+
+.variantGhost:hover:not(:disabled) .inner {
+  background-color: var(--color-surface-hover, #e5e5e5);
+}
+
+.variantGhost:active:not(:disabled) .inner {
+  background-color: var(--color-surface-alt, #f5f5f5);
+  transform: scale(0.98);
+}
+
+.variantGhost:focus-visible .inner {
+  box-shadow: 0 0 0 2px var(--color-surface, #fafafa),
+              0 0 0 4px var(--color-focus-ring, var(--color-primary-500));
 }
 
 /* ── Sizes ── */
-.sizeSmall {
-  .inner {
-    font-size: 0.75rem;
-  }
+.sizeSmall .inner {
+  font-size: var(--font-size-200, 0.75rem);
+  padding: 0.35em 0.75em;
 }
 
-.sizeMedium {
-  width: min-content;
-  margin: 0 auto;
-  .inner {
-    font-size: 0.75rem;
-  }
+.sizeMedium .inner {
+  font-size: var(--font-size-300, 0.875rem);
+  padding: 0.5em 1em;
 }
 
-.sizeLarge {
-  width: 94px;
-  height: 92px;
-
-  .inner {
-    text-align: left;
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 10px 8px;
-  }
-}
-
-/* ── Backlit state — persistent ambient glow ── */
-@keyframes backlitPulse {
-  0%,
-  100% {
-    opacity: 0.85;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.backlit {
-  --backlit-color: var(--bg, var(--keycap-orange-light, #e8894d));
-  border-color: color-mix(in srgb, var(--backlit-color) 25%, transparent);
-
-  .inner {
-    box-shadow:
-      inset var(--_bevel) var(--_bevel) var(--_bevel) var(--shadow-hi),
-      inset calc(var(--_bevel) * -1) calc(var(--_bevel) * -1) var(--_bevel)
-        var(--shadow-lo),
-      0 0 0.25em color-mix(in srgb, var(--backlit-color) 80%, #fff),
-      0 0 0.625em var(--backlit-color),
-      0 0 1.5em color-mix(in srgb, var(--backlit-color) 60%, transparent),
-      0 0 3em color-mix(in srgb, var(--backlit-color) 30%, transparent),
-      0 0 5em color-mix(in srgb, var(--backlit-color) 15%, transparent);
-    animation: backlitPulse 4s ease-in-out infinite;
-  }
+.sizeLarge .inner {
+  font-size: var(--font-size-400, 1rem);
+  padding: 0.65em 1.25em;
 }
