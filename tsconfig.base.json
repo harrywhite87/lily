@@ -33,6 +33,9 @@
       "@lilypad/three-particles-workbench": [
         "libs/three/particles-workbench/src/index.ts"
       ],
+      "@lilypad/three-fusion-reactor-demo": [
+        "libs/three/fusion-reactor-demo/src/index.ts"
+      ],
       "@lilypad/three-model-runtime": [
         "libs/three/model-runtime/src/index.ts"
       ],

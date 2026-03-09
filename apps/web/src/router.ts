@@ -13,6 +13,7 @@ import { ShipyardPage } from './features/shipyard/ShipyardPage';
 import { BattleboardPage } from './features/battleboard/BattleboardPage';
 import { ParticleCloudDemoPage } from './features/particle-cloud-demo/ParticleCloudDemoPage';
 import { SwarmDemoPage } from './features/swarm-demo/SwarmDemoPage';
+import { FusionReactorDemoPage } from './features/fusion-reactor/FusionReactorDemoPage';
 
 /* ───────────────────────── types ──────────────────────────────── */
 export interface RouteEntry {
@@ -56,6 +57,7 @@ export const routes: RouteEntry[] = [
   { path: '/battleboard',      label: 'Battleboard', component: BattleboardPage },
   { path: '/particle-clouds',  label: 'Clouds',      component: ParticleCloudDemoPage },
   { path: '/swarm',            label: 'Swarm',       component: SwarmDemoPage },
+  { path: '/fusion-reactor',   label: 'Reactor',     component: FusionReactorDemoPage },
 ];
 
 /* ───────────────────────── helpers ────────────────────────────── */

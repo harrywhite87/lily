@@ -53,6 +53,10 @@ export default defineConfig({
         __dirname,
         '../../libs/three/scroll-scene/src',
       ),
+      '@lilypad/three-fusion-reactor-demo': path.resolve(
+        __dirname,
+        '../../libs/three/fusion-reactor-demo/src',
+      ),
     },
   },
   css: {
