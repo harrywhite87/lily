@@ -29,7 +29,7 @@ const preview: Preview = {
     },
   },
   initialGlobals: {
-    theme: 'dark',
+    theme: 'light',
   },
   parameters: {
     controls: {
@@ -41,9 +41,9 @@ const preview: Preview = {
   },
   decorators: [
     (Story, context) => {
-      const theme = context.globals.theme || 'dark';
+      const theme = context.globals.theme || 'light';
       document.documentElement.setAttribute('data-theme', theme);
-      document.body.style.backgroundColor = THEME_BG[theme] ?? THEME_BG.dark;
+      document.body.style.backgroundColor = THEME_BG[theme] ?? THEME_BG.light;
       return Story();
     },
   ],
