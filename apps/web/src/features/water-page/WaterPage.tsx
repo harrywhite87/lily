@@ -132,6 +132,11 @@ export function WaterPage() {
           gl.toneMapping = THREE.NoToneMapping;
         }}
       >
+        <fog attach="fog" args={[
+          '#8fb8cf',
+          waterOverrides.fogNear ?? 8.0,
+          waterOverrides.fogFar ?? 56.0,
+        ]} />
         <Suspense fallback={null}>
           <SkyDome
             exposure={exposure}

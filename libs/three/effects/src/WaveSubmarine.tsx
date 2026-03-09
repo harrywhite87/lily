@@ -125,7 +125,19 @@ export function WaveSubmarine({
   );
 
   const waveConfig = useMemo(() => resolveWaterOverrides(overrides), [overrides]);
-  const model = useMemo(() => gltf.scene.clone(true), [gltf]);
+  const model = useMemo(() => {
+    const cloned = gltf.scene.clone(true);
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        for (const m of materials) {
+          (m as THREE.MeshStandardMaterial).fog = true;
+        }
+      }
+    });
+    return cloned;
+  }, [gltf]);
 
   const tmp = useMemo(
     () => ({
