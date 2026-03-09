@@ -1,0 +1,84 @@
+// ──────────────────────────────────────────────
+// Example SCSS Module
+// ──────────────────────────────────────────────
+// This file demonstrates how to consume design
+// tokens inside a component SCSS module.
+// It is not meant to be used directly — it is a
+// reference for how components should be styled.
+// ──────────────────────────────────────────────
+
+// ── Button ─────────────────────────────────────
+.root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-300);
+
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-300);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+
+  padding: var(--size-400) var(--size-500);
+  border: none;
+  border-radius: var(--radius-300);
+  cursor: pointer;
+
+  background-color: var(--color-primary-500);
+  color: var(--color-neutral-50);
+
+  transition: opacity var(--transition-base);
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: var(--size-200);
+  }
+}
+
+// ── Card ───────────────────────────────────────
+.card {
+  background: var(--color-surface-alt);
+  border: var(--size-100) solid var(--color-border);
+  border-radius: var(--radius-400);
+  padding: var(--size-600);
+}
+
+.cardTitle {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-500);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--size-400);
+}
+
+.cardBody {
+  font-size: var(--font-size-400);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-normal);
+}
+
+// ── Input ──────────────────────────────────────
+.input {
+  width: 100%;
+  padding: var(--size-400) var(--size-500);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-300);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: var(--size-100) solid var(--color-border);
+  border-radius: var(--radius-300);
+  transition: border-color var(--transition-base);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-focus-ring);
+  }
+}

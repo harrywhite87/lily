@@ -1,0 +1,6 @@
+{
+  "name": "style-baseline",
+  "sourceRoot": "libs/style-baseline/src",
+  "projectType": "library",
+  "targets": {}
+}

@@ -3,7 +3,6 @@
 export { DebugOverlay } from './core/DebugOverlay';
 export { useDebug, useDebugStore } from './core/store';
 export { useDebugControls } from './controls/useDebugControls';
-export { AssetsPlugin } from './assets/AssetsPlugin';
 export {
   OBJECT_INSPECTOR_SURFACE_KEY,
   setObjectInspectorSurface,
@@ -36,14 +35,6 @@ export type {
   FolderControl,
   FlatValues,
 } from './controls/types';
-
-/* Re-export shared asset types for convenience */
-export type {
-  AssetRecord,
-  AssetKind,
-  AssetSource,
-  LoadedAsset,
-} from '@lilypad/three-assets';
 
 export type {
   InspectorScalar,

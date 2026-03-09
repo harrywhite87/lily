@@ -1,0 +1,18 @@
+.root {
+  display: block;
+
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-200);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+
+  color: var(--color-text-muted);
+  margin-bottom: var(--size-300);
+
+  cursor: default;
+}
+
+.required::after {
+  content: ' *';
+  color: var(--color-danger);
+}

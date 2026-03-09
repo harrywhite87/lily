@@ -1,0 +1,23 @@
+// ──────────────────────────────────────────────
+// Theme: Dark (default)
+// ──────────────────────────────────────────────
+// Applied on :root — this is the default theme.
+// These alias tokens are the theme-aware layer
+// that components should consume. Raw palette
+// values live in tokens.scss and stay constant.
+// ──────────────────────────────────────────────
+
+:root {
+  --color-text:          var(--color-neutral-50);
+  --color-text-muted:    var(--color-neutral-500);
+  --color-surface:       var(--color-neutral-900);
+  --color-surface-alt:   var(--color-neutral-800);
+  --color-surface-hover: var(--color-neutral-700);
+  --color-border:        var(--color-neutral-800);
+  --color-border-subtle: var(--color-neutral-700);
+  --color-focus-ring:    var(--color-primary-500);
+  --color-input-bg:      var(--color-neutral-800);
+  --color-placeholder:   var(--color-neutral-500);
+  --color-disabled-bg:   var(--color-neutral-800);
+  --color-disabled-text: var(--color-neutral-600);
+}

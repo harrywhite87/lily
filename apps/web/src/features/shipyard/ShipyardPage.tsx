@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
-import { DebugOverlay, useDebugControls, AssetsPlugin } from '@lilypad/debug';
+import { DebugOverlay, useDebugControls } from '@lilypad/debug';
+import { AssetsPlugin } from '@lilypad/debug-assets';
 import { useAssetRegistry } from '@lilypad/three-assets';
 import { PageLayout } from '../layout/PageLayout';
 

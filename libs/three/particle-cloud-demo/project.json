@@ -1,0 +1,15 @@
+{
+  "name": "three-particle-cloud-demo",
+  "sourceRoot": "libs/three/particle-cloud-demo/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/three/particle-cloud-demo" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/three/particle-cloud-demo" }
+    }
+  }
+}

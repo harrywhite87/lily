@@ -1,5 +1,5 @@
 import { AssetsPanel } from './AssetsPanel';
-import type { DebugPlugin } from '../core/types';
+import type { DebugPlugin } from '@lilypad/debug';
 import type { AssetManager } from '@lilypad/three-assets';
 
 /**

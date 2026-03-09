@@ -1,0 +1,15 @@
+{
+  "name": "debug-assets",
+  "sourceRoot": "libs/debug-assets/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/debug-assets" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/debug-assets" }
+    }
+  }
+}

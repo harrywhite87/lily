@@ -1,0 +1,41 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.select {
+  width: 100%;
+  padding: var(--size-400) var(--size-500);
+  padding-right: var(--size-700);
+  appearance: none;
+
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-300);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+
+  color: var(--color-text);
+  background: var(--color-input-bg);
+  border: var(--size-100) solid var(--color-border);
+  border-radius: var(--radius-300);
+
+  transition: border-color var(--transition-base),
+              box-shadow var(--transition-base);
+
+  // Chevron indicator
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--size-400) center;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-focus-ring);
+    box-shadow: 0 0 0 var(--size-100) var(--color-focus-ring);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: var(--color-disabled-bg);
+    color: var(--color-disabled-text);
+  }
+}

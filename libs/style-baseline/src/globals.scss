@@ -1,0 +1,20 @@
+// ──────────────────────────────────────────────
+// Global Entry Point
+// ──────────────────────────────────────────────
+// Import order matters:
+//   1. Reset       — normalise browser defaults
+//   2. Tokens      — define invariant custom properties
+//   3. Theme Dark  — default theme alias tokens
+//   4. Theme Light — light theme overrides
+//   5. Typography  — apply type foundations
+//
+// Copy this file (and the partials) into your
+// app's styles/ folder, then import it once from
+// your app entry point or shell component.
+// ──────────────────────────────────────────────
+
+@use 'reset';
+@use 'tokens';
+@use 'theme-dark';
+@use 'theme-light';
+@use 'typography';

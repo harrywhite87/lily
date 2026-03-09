@@ -1,5 +1,6 @@
+/// <reference types="vite/client" />
 import { useEffect } from 'react';
-import { useDebugStore } from '../core/store';
+import { useDebugStore } from '@lilypad/debug';
 import { useAssetStore, type AssetManager } from '@lilypad/three-assets';
 import { DebugSceneHelper } from './DebugSceneHelper';
 import styles from './AssetsPanel.module.scss';

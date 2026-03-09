@@ -1,0 +1,15 @@
+{
+  "name": "three-path-builder",
+  "sourceRoot": "libs/three/path-builder/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/three/path-builder" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/three/path-builder" }
+    }
+  }
+}

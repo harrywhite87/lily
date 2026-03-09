@@ -1,0 +1,54 @@
+// ──────────────────────────────────────────────
+// Typography Foundations
+// ──────────────────────────────────────────────
+// Global typography defaults. Requires tokens.scss
+// to be loaded first so the custom properties exist.
+// ──────────────────────────────────────────────
+
+html {
+  font-size: 100%; // 16px baseline
+}
+
+body {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-400);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ── Headings ───────────────────────────────────
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+h1 { font-size: var(--font-size-700); }
+h2 { font-size: var(--font-size-600); }
+h3 { font-size: var(--font-size-500); }
+h4 { font-size: var(--font-size-400); }
+h5 { font-size: var(--font-size-300); }
+h6 { font-size: var(--font-size-200); }
+
+// ── Labels / small text ────────────────────────
+small,
+label {
+  font-size: var(--font-size-200);
+  font-weight: var(--font-weight-medium);
+}
+
+// ── Code / monospace ───────────────────────────
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-300);
+}
+
+pre {
+  overflow-x: auto;
+}

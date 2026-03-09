@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -5,7 +6,7 @@ import { useScrollProgress } from '@lilypad/scroll';
 import { Animation, easeSmoothstep, easeSineInOut } from '@lilypad/animation';
 import { useDebugControls, useObjectInspectorSurface } from '@lilypad/debug';
 import type { FolderControl, ObjectInspectorSurface } from '@lilypad/debug';
-import { useModel } from '../model-loader/ModelContext';
+import { useModel } from '@lilypad/three-model-runtime';
 import * as THREE from 'three';
 
 /** Node names as they appear in the GLB (underscores, not spaces). */

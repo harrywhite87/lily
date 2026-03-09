@@ -1,0 +1,22 @@
+// ──────────────────────────────────────────────
+// Theme: Light
+// ──────────────────────────────────────────────
+// Applied via data-theme="light" on the root
+// element. Overrides the dark alias tokens with
+// light-appropriate values from the same palette.
+// ──────────────────────────────────────────────
+
+[data-theme="light"] {
+  --color-text:          var(--color-neutral-900);
+  --color-text-muted:    var(--color-neutral-600);
+  --color-surface:       var(--color-neutral-50);
+  --color-surface-alt:   var(--color-neutral-100);
+  --color-surface-hover: var(--color-neutral-200);
+  --color-border:        var(--color-neutral-300);
+  --color-border-subtle: var(--color-neutral-200);
+  --color-focus-ring:    var(--color-primary-500);
+  --color-input-bg:      var(--color-neutral-100);
+  --color-placeholder:   var(--color-neutral-400);
+  --color-disabled-bg:   var(--color-neutral-200);
+  --color-disabled-text: var(--color-neutral-400);
+}

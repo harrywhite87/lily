@@ -7,17 +7,7 @@ import { Area3 } from './features/content/Area3';
 import { Area4 } from './features/content/Area4';
 import { SceneOverlay } from './features/scene/SceneOverlay';
 import { NavBar } from './features/nav/NavBar';
-import { ModelLoaderPage } from './features/model-loader/ModelLoaderPage';
-import { CausticsPage } from './features/caustics-page/CausticsPage';
-import { WaterPage } from './features/water-page/WaterPage';
-import { BlueprintPage } from './features/blueprint-page/BlueprintPage';
-import { BuildPage } from './features/build-page/BuildPage';
-import { ParticlesPage } from './features/particles-page/ParticlesPage';
-import { PathBuilderPage } from './features/path-builder/PathBuilderPage';
-import { ShipyardPage } from './features/shipyard/ShipyardPage';
-import { BattleboardPage } from './features/battleboard/BattleboardPage';
-import { ParticleCloudDemoPage } from './features/particle-cloud-demo/ParticleCloudDemoPage';
-import { SwarmDemoPage } from './features/swarm-demo/SwarmDemoPage';
+import { enabledRoutes } from './router';
 import styles from './App.module.scss';
 
 export function App() {
@@ -26,17 +16,9 @@ export function App() {
       <NavBar />
       <Routes>
         <Route path="/" element={<ScrollDemo />} />
-        <Route path="/model-loader" element={<ModelLoaderPage />} />
-        <Route path="/caustics" element={<CausticsPage />} />
-        <Route path="/water" element={<WaterPage />} />
-        <Route path="/blueprint" element={<BlueprintPage />} />
-        <Route path="/build" element={<BuildPage />} />
-        <Route path="/particles" element={<ParticlesPage />} />
-        <Route path="/path-builder" element={<PathBuilderPage />} />
-        {/* <Route path="/shipyard" element={<ShipyardPage />} /> */}
-        <Route path="/battleboard" element={<BattleboardPage />} />
-        <Route path="/particle-clouds" element={<ParticleCloudDemoPage />} />
-        <Route path="/swarm" element={<SwarmDemoPage />} />
+        {enabledRoutes().map(({ path, component: Page }) => (
+          <Route key={path} path={path} element={<Page />} />
+        ))}
       </Routes>
     </>
   );

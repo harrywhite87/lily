@@ -11,18 +11,38 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowArbitraryExtensions": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "typeRoots": ["node_modules/@types"],
+    "typeRoots": ["node_modules/@types", "types"],
     "paths": {
       "@lilypad/shared": ["libs/shared/src/index.ts"],
       "@lilypad/scroll": ["libs/scroll/src/index.ts"],
       "@lilypad/animation": ["libs/animation/src/index.ts"],
+      "@lilypad/page-layout": ["libs/ui/page-layout/src/index.ts"],
       "@lilypad/debug": ["libs/debug/src/index.ts"],
+      "@lilypad/debug-assets": ["libs/debug-assets/src/index.ts"],
       "@lilypad/three-assets": ["libs/three/assets/src/index.ts"],
-      "@lilypad/three-particles": ["libs/three/particles/src/index.ts"]
+      "@lilypad/three-path-builder": ["libs/three/path-builder/src/index.ts"],
+      "@lilypad/three-particle-cloud-demo": [
+        "libs/three/particle-cloud-demo/src/index.ts"
+      ],
+      "@lilypad/three-particles": ["libs/three/particles/src/index.ts"],
+      "@lilypad/three-particles-workbench": [
+        "libs/three/particles-workbench/src/index.ts"
+      ],
+      "@lilypad/three-model-runtime": [
+        "libs/three/model-runtime/src/index.ts"
+      ],
+      "@lilypad/three-swarm-demo": ["libs/three/swarm-demo/src/index.ts"],
+      "@lilypad/three-battleboard": ["libs/three/battleboard/src/index.ts"],
+      "@lilypad/three-effects": ["libs/three/effects/src/index.ts"],
+      "@lilypad/three-scroll-scene": [
+        "libs/three/scroll-scene/src/index.ts"
+      ],
+      "@lilypad/form-elements": ["libs/ui/form-elements/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

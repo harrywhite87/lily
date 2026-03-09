@@ -1,0 +1,15 @@
+{
+  "name": "three-model-runtime",
+  "sourceRoot": "libs/three/model-runtime/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/three/model-runtime" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/three/model-runtime" }
+    }
+  }
+}

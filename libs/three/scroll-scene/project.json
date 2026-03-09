@@ -1,0 +1,15 @@
+{
+  "name": "three-scroll-scene",
+  "sourceRoot": "libs/three/scroll-scene/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "command": "vitest run",
+      "options": { "cwd": "libs/three/scroll-scene" }
+    },
+    "typecheck": {
+      "command": "tsc --noEmit -p tsconfig.json",
+      "options": { "cwd": "libs/three/scroll-scene" }
+    }
+  }
+}

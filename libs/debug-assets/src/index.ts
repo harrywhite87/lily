@@ -1,0 +1,1 @@
+export { AssetsPlugin } from './AssetsPlugin';
