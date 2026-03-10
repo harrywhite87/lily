@@ -3,7 +3,7 @@ import { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { DebugOverlay } from '@lilypad/debug';
+import { DebugOverlay, DebugPanel } from '@lilypad/debug';
 import { PageLayout } from '@lilypad/page-layout';
 import {
   useFusionReactorInspector,
@@ -374,7 +374,9 @@ export function FusionReactorDemoPage({
 }: FusionReactorDemoPageProps) {
   return (
     <PageLayout background={background}>
+      <DebugPanel position="left" />
       <Canvas
+        style={{ flex: 1 }}
         camera={{ fov: 50, near: 0.1, far: 100, position: [0, 3, 10] }}
         gl={{ antialias: true }}
       >
@@ -395,6 +397,7 @@ export function FusionReactorDemoPage({
           </div>
         </div>
       ) : null}
+      <DebugPanel position="right" />
     </PageLayout>
   );
 }

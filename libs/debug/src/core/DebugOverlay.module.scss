@@ -59,6 +59,90 @@
   width: 360px;
 }
 
+/* ─── Push-layout sidebar (outside Canvas) ─── */
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  height: 100%;
+  background: var(--bg-primary);
+  border: var(--size-100) solid var(--border-primary);
+  color: var(--text-primary);
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  user-select: none;
+  overflow: hidden;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.panelLeft {
+  order: -1;
+  border-left: 0;
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.panelRight {
+  order: 1;
+  border-right: 0;
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.panelInner {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: var(--size-400);
+  overflow: hidden;
+}
+
+/* ─── Resize handle ─── */
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background-color 0.15s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 32px;
+    border-radius: 1px;
+    background: var(--border-primary);
+    transition: background-color 0.15s ease, height 0.15s ease;
+  }
+
+  &:hover,
+  &:active {
+    background: rgba(255, 255, 255, 0.04);
+
+    &::after {
+      background: var(--color-primary-500);
+      height: 48px;
+    }
+  }
+}
+
+.panelLeft .resizeHandle {
+  right: 0;
+}
+
+.panelRight .resizeHandle {
+  left: 0;
+}
+
 /* ─── Header ─── */
 
 .header {
@@ -169,7 +253,6 @@
   background: var(--bg-surface);
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
 }
 
 /* ─── Footer ─── */

@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { Grid, OrbitControls } from '@react-three/drei';
-import { DebugOverlay } from '@lilypad/debug';
+import { DebugOverlay, DebugPanel } from '@lilypad/debug';
 import { PageLayout } from '@lilypad/page-layout';
 import { PathLine } from './PathLine';
 import { PathMarkers } from './PathMarkers';
@@ -57,7 +57,9 @@ export function PathBuilderPage({
 }: PathBuilderPageProps) {
   return (
     <PageLayout background={background}>
+      <DebugPanel position="left" />
       <Canvas
+        style={{ flex: 1 }}
         camera={{ position: [6, 5, 8], fov: 50, near: 0.1, far: 1000 }}
         gl={{ alpha: false, antialias: true }}
       >
@@ -70,6 +72,7 @@ export function PathBuilderPage({
           showDebugOverlay={showDebugOverlay}
         />
       </Canvas>
+      <DebugPanel position="right" />
     </PageLayout>
   );
 }

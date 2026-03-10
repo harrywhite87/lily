@@ -1,10 +1,11 @@
 /// <reference types="vite/client" />
-import { useMemo, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useCallback, useMemo, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { DebugOverlay } from '@lilypad/debug';
+import { DebugOverlay, DebugPanel } from '@lilypad/debug';
 import { PageLayout } from '@lilypad/page-layout';
+import { TAU, getPlasmaToroidUniformConfig } from './plasmaToroidField';
 import {
   usePlasmaToroidInspector,
   DEFAULT_PLASMA_TOROID_TUNING,
@@ -12,17 +13,12 @@ import {
 } from './usePlasmaToroidInspector';
 import styles from './PlasmaToroidDemoPage.module.scss';
 
-/* ─────────────────── constants ─────────────────── */
-
-const TAU = Math.PI * 2;
-
-/* ─────────────────── GLSL shaders ─────────────────── */
-
 const vertexShader = /* glsl */ `
   attribute float aTheta0;
   attribute float aPhi0;
   attribute float aSpeedTheta;
   attribute float aSpeedPhi;
+  attribute float aThetaDirectionSeed;
   attribute float aRadialJitter;
   attribute float aDensitySeed;
   attribute float aSizeSeed;
@@ -33,151 +29,252 @@ const vertexShader = /* glsl */ `
   uniform float uTime;
   uniform float uMajorRadius;
   uniform float uMinorRadius;
-  uniform float uPointSize;
-  uniform float uPointSizeVariance;
-  uniform float uAlpha;
   uniform float uHaloSpread;
+  uniform float uOrbitThetaSpeed;
+  uniform float uOrbitPhiSpeed;
+  uniform float uOrbitThetaDirectionMode;
 
-  uniform float uMajorNoiseAmp1;
-  uniform float uMajorNoiseAmp2;
-  uniform float uMajorNoiseFreq1;
-  uniform float uMajorNoiseFreq2;
-  uniform float uMajorNoiseSpeed1;
-  uniform float uMajorNoiseSpeed2;
+  uniform float uThetaDriftAmp;
+  uniform float uThetaDriftFreqTheta;
+  uniform float uThetaDriftFreqPhi;
+  uniform float uThetaDriftSpeed;
 
-  uniform float uTubeNoiseAmp1;
-  uniform float uTubeNoiseAmp2;
-  uniform float uTubeNoiseAmp3;
-  uniform float uTubeNoiseFreqTheta1;
-  uniform float uTubeNoiseFreqTheta2;
-  uniform float uTubeNoiseFreqTheta3;
-  uniform float uTubeNoiseFreqPhi1;
-  uniform float uTubeNoiseFreqPhi2;
-  uniform float uTubeNoiseFreqPhi3;
-  uniform float uTubeNoiseSpeed1;
-  uniform float uTubeNoiseSpeed2;
-  uniform float uTubeNoiseSpeed3;
+  uniform float uPhiDriftAmp;
+  uniform float uPhiDriftFreqTheta;
+  uniform float uPhiDriftFreqPhi;
+  uniform float uPhiDriftSpeed;
+
+  uniform float uRingWobbleAmp;
+  uniform float uRingWobbleFreqTheta;
+  uniform float uRingWobbleFreqPhi;
+  uniform float uRingWobbleSpeed;
+
+  uniform float uRadialWobbleAmp;
+  uniform float uRadialWobbleFreqTheta;
+  uniform float uRadialWobbleFreqPhi;
+  uniform float uRadialWobbleSpeed;
+
+  uniform float uBinormalWobbleAmp;
+  uniform float uBinormalWobbleFreqTheta;
+  uniform float uBinormalWobbleFreqPhi;
+  uniform float uBinormalWobbleSpeed;
+
+  uniform float uTangentWobbleAmp;
+  uniform float uTangentWobbleFreqTheta;
+  uniform float uTangentWobbleFreqPhi;
+  uniform float uTangentWobbleSpeed;
+
+  uniform float uWarpEnabled;
+  uniform float uWarpAmpX;
+  uniform float uWarpAmpY;
+  uniform float uWarpAmpZ;
+  uniform float uWarpFreqTheta;
+  uniform float uWarpFreqPhi;
+  uniform float uWarpSpeed;
 
   uniform float uDensityBase;
   uniform float uDensityAmp1;
-  uniform float uDensityAmp2;
   uniform float uDensityFreqTheta1;
-  uniform float uDensityFreqTheta2;
   uniform float uDensityFreqPhi1;
-  uniform float uDensityFreqPhi2;
   uniform float uDensitySpeed1;
+  uniform float uDensityAmp2;
+  uniform float uDensityFreqTheta2;
+  uniform float uDensityFreqPhi2;
   uniform float uDensitySpeed2;
+
+  uniform float uPointSize;
+  uniform float uPointSizeVariance;
+  uniform float uAlpha;
+  uniform float uSoftness;
 
   varying float vAlpha;
   varying float vEnergy;
 
-  const float TAU = 6.28318530718;
+  float sampleWave(
+    float amp,
+    float freqTheta,
+    float freqPhi,
+    float speed,
+    float theta,
+    float phi,
+    float time,
+    float phaseOffset
+  ) {
+    return amp * sin(theta * freqTheta + phi * freqPhi + time * speed + phaseOffset);
+  }
 
-  vec3 ringCenter(float theta, float R) {
-    return vec3(cos(theta) * R, 0.0, sin(theta) * R);
+  vec3 ringCenter(float theta, float radius) {
+    return vec3(cos(theta) * radius, 0.0, sin(theta) * radius);
   }
 
   vec3 ringNormal(float theta) {
     return normalize(vec3(cos(theta), 0.0, sin(theta)));
   }
 
-  vec3 ringBinormal() {
-    return vec3(0.0, 1.0, 0.0);
+  vec3 ringTangent(float theta) {
+    return normalize(vec3(-sin(theta), 0.0, cos(theta)));
+  }
+
+  float resolveThetaDirection(float mode, float seed) {
+    if (mode > 0.5) {
+      return 1.0;
+    }
+
+    if (mode < -0.5) {
+      return -1.0;
+    }
+
+    return seed < 0.85 ? 1.0 : -1.0;
   }
 
   void main() {
-    float theta = aTheta0 + uTime * aSpeedTheta;
-    float phi   = aPhi0   + uTime * aSpeedPhi;
+    float thetaDirection = resolveThetaDirection(uOrbitThetaDirectionMode, aThetaDirectionSeed);
+    float theta = aTheta0 + uTime * aSpeedTheta * uOrbitThetaSpeed * thetaDirection;
+    float phi = aPhi0 + uTime * aSpeedPhi * uOrbitPhiSpeed;
 
-    // Major-angle offset
-    theta +=
-        0.08 * sin(theta * 2.0 + uTime * 0.7 + aPhase)
-      + 0.05 * sin(theta * 5.0 - uTime * 1.1 + aPhase * 1.7)
-      + 0.03 * sin(phi   * 3.0 + uTime * 0.9 + aPhase * 0.3);
+    theta += sampleWave(
+      uThetaDriftAmp,
+      uThetaDriftFreqTheta,
+      uThetaDriftFreqPhi,
+      uThetaDriftSpeed,
+      theta,
+      phi,
+      uTime,
+      aPhase
+    );
 
-    // Tube-angle offset
-    phi +=
-        0.12 * sin(theta * 3.0 + phi * 2.0 + uTime * 0.8 + aPhase)
-      + 0.07 * sin(theta * 6.0 - phi * 4.0 - uTime * 1.3 + aPhase * 1.2);
+    phi += sampleWave(
+      uPhiDriftAmp,
+      uPhiDriftFreqTheta,
+      uPhiDriftFreqPhi,
+      uPhiDriftSpeed,
+      theta,
+      phi,
+      uTime,
+      aPhase * 1.17
+    );
 
-    // Major radius deformation
-    float majorNoise =
-        uMajorNoiseAmp1 * sin(theta * uMajorNoiseFreq1 + uTime * uMajorNoiseSpeed1)
-      + uMajorNoiseAmp2 * sin(theta * uMajorNoiseFreq2 - uTime * uMajorNoiseSpeed2 + aPhase);
-    float majorRadius = uMajorRadius + majorNoise;
+    float ringOffset = sampleWave(
+      uRingWobbleAmp,
+      uRingWobbleFreqTheta,
+      uRingWobbleFreqPhi,
+      uRingWobbleSpeed,
+      theta,
+      phi,
+      uTime,
+      aPhase * 0.73
+    );
 
-    // Minor radius deformation
-    float tubeNoise =
-        uTubeNoiseAmp1 * sin(
-          theta * uTubeNoiseFreqTheta1 +
-          phi   * uTubeNoiseFreqPhi1 +
-          uTime * uTubeNoiseSpeed1 +
-          aPhase
-        )
-      + uTubeNoiseAmp2 * sin(
-          theta * uTubeNoiseFreqTheta2 -
-          phi   * uTubeNoiseFreqPhi2 -
-          uTime * uTubeNoiseSpeed2 +
-          aPhase * 1.3
-        )
-      + uTubeNoiseAmp3 * sin(
-          theta * uTubeNoiseFreqTheta3 +
-          phi   * uTubeNoiseFreqPhi3 +
-          uTime * uTubeNoiseSpeed3 +
-          aPhase * 0.6
-        );
-    float minorRadius = uMinorRadius + tubeNoise;
+    float haloOffset = aRadialJitter * (0.05 + mix(0.0, uHaloSpread, aBand));
+    float radialOffset = sampleWave(
+      uRadialWobbleAmp,
+      uRadialWobbleFreqTheta,
+      uRadialWobbleFreqPhi,
+      uRadialWobbleSpeed,
+      theta,
+      phi,
+      uTime,
+      aPhase
+    ) + haloOffset;
 
-    // Radial particle spread
-    float radialSpread =
-        aRadialJitter * (0.08 + mix(0.0, uHaloSpread, aBand))
-      + aBand * 0.04 * sin(theta * 4.0 + uTime * 1.2 + aPhase);
-    minorRadius += radialSpread;
+    float binormalOffset = sampleWave(
+      uBinormalWobbleAmp,
+      uBinormalWobbleFreqTheta,
+      uBinormalWobbleFreqPhi,
+      uBinormalWobbleSpeed,
+      theta,
+      phi,
+      uTime,
+      aPhase * 1.31
+    );
 
-    // Density field
-    float densityField =
-        uDensityBase
-      + uDensityAmp1 * sin(
-          theta * uDensityFreqTheta1 +
-          phi   * uDensityFreqPhi1 +
-          uTime * uDensitySpeed1
-        )
-      + uDensityAmp2 * sin(
-          theta * uDensityFreqTheta2 -
-          phi   * uDensityFreqPhi2 -
-          uTime * uDensitySpeed2 +
-          aPhase
-        );
-    float density = clamp(densityField, 0.0, 1.0);
+    float tangentOffset = sampleWave(
+      uTangentWobbleAmp,
+      uTangentWobbleFreqTheta,
+      uTangentWobbleFreqPhi,
+      uTangentWobbleSpeed,
+      theta,
+      phi,
+      uTime,
+      aPhase * 0.61
+    );
+
+    float density = clamp(
+      uDensityBase +
+        sampleWave(
+          uDensityAmp1,
+          uDensityFreqTheta1,
+          uDensityFreqPhi1,
+          uDensitySpeed1,
+          theta,
+          phi,
+          uTime,
+          0.0
+        ) +
+        sampleWave(
+          uDensityAmp2,
+          uDensityFreqTheta2,
+          uDensityFreqPhi2,
+          uDensitySpeed2,
+          theta,
+          phi,
+          uTime,
+          aPhase * 1.91
+        ),
+      0.0,
+      1.0
+    );
+
     float visibleSoft = smoothstep(aDensitySeed - 0.08, aDensitySeed + 0.08, density);
 
-    // Final position
+    float majorRadius = uMajorRadius + ringOffset;
     vec3 center = ringCenter(theta, majorRadius);
-    vec3 n = ringNormal(theta);
-    vec3 b = ringBinormal();
-    vec3 tangent = normalize(vec3(-sin(theta), 0.0, cos(theta)));
+    vec3 normal = ringNormal(theta);
+    vec3 tangent = ringTangent(theta);
+    vec3 tubeDirection = normalize(normal * cos(phi) + vec3(0.0, 1.0, 0.0) * sin(phi));
 
-    vec3 pos = center + (n * cos(phi) + b * sin(phi)) * minorRadius;
-    pos += tangent * 0.015 * sin(phi * 5.0 + uTime * 1.5 + aPhase);
+    vec3 pos = center + tubeDirection * (uMinorRadius + radialOffset);
+    pos += vec3(0.0, 1.0, 0.0) * binormalOffset;
+    pos += tangent * tangentOffset;
+
+    vec3 warpOffset = vec3(
+      sin(
+        theta * uWarpFreqTheta +
+        phi * uWarpFreqPhi +
+        uTime * uWarpSpeed +
+        aPhase * 0.71
+      ) * uWarpAmpX,
+      sin(
+        theta * (uWarpFreqTheta + 0.9) -
+        phi * (uWarpFreqPhi + 0.35) -
+        uTime * (uWarpSpeed * 1.17) +
+        aPhase * 1.17
+      ) * uWarpAmpY,
+      sin(
+        theta * (uWarpFreqTheta - 0.55) +
+        phi * (uWarpFreqPhi + 0.7) +
+        uTime * (uWarpSpeed * 0.91) +
+        aPhase * 1.53
+      ) * uWarpAmpZ
+    );
+
+    pos += warpOffset * uWarpEnabled;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
-    // Point size
     float size = uPointSize * mix(0.7, 1.0 + uPointSizeVariance, aSizeSeed);
     size *= mix(0.85, 1.2, aEnergySeed);
     size *= mix(0.5, 1.0, visibleSoft);
     gl_PointSize = size * (1.0 / -mvPosition.z);
 
-    vAlpha = uAlpha * visibleSoft;
+    vAlpha = uAlpha * visibleSoft * uSoftness;
     vEnergy = aEnergySeed;
   }
 `;
 
 const fragmentShader = /* glsl */ `
   precision highp float;
-
-  uniform float uSoftness;
 
   varying float vAlpha;
   varying float vEnergy;
@@ -192,7 +289,6 @@ const fragmentShader = /* glsl */ `
     float alpha = disc * vAlpha;
     alpha *= mix(0.85, 1.15, vEnergy);
     alpha += core * 0.12 * vAlpha;
-    alpha *= uSoftness;
 
     if (alpha < 0.01) discard;
 
@@ -206,105 +302,77 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-/* ─────────────────── geometry generation ─────────────────── */
-
 function buildToroidGeometry(count: number) {
-  const aTheta0       = new Float32Array(count);
-  const aPhi0         = new Float32Array(count);
-  const aSpeedTheta   = new Float32Array(count);
-  const aSpeedPhi     = new Float32Array(count);
+  const aTheta0 = new Float32Array(count);
+  const aPhi0 = new Float32Array(count);
+  const aSpeedTheta = new Float32Array(count);
+  const aSpeedPhi = new Float32Array(count);
+  const aThetaDirectionSeed = new Float32Array(count);
   const aRadialJitter = new Float32Array(count);
-  const aDensitySeed  = new Float32Array(count);
-  const aSizeSeed     = new Float32Array(count);
-  const aEnergySeed   = new Float32Array(count);
-  const aPhase        = new Float32Array(count);
-  const aBand         = new Float32Array(count);
-  const positions     = new Float32Array(count * 3); // required by THREE, all zeros
+  const aDensitySeed = new Float32Array(count);
+  const aSizeSeed = new Float32Array(count);
+  const aEnergySeed = new Float32Array(count);
+  const aPhase = new Float32Array(count);
+  const aBand = new Float32Array(count);
+  const positions = new Float32Array(count * 3);
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < count; i += 1) {
     aTheta0[i] = Math.random() * TAU;
-    aPhi0[i]   = Math.random() * TAU;
+    aPhi0[i] = Math.random() * TAU;
 
-    // Biased speed distributions for grouped flow
     const speedThetaBase = 0.4 + Math.random() * 1.0;
-    aSpeedTheta[i] = speedThetaBase * (Math.random() < 0.85 ? 1 : -1);
+    aSpeedTheta[i] = speedThetaBase;
 
     const speedPhiBase = 0.2 + Math.random() * 1.0;
     aSpeedPhi[i] = speedPhiBase * (Math.random() < 0.5 ? 1 : -1);
+    aThetaDirectionSeed[i] = Math.random();
 
-    aRadialJitter[i] = (Math.random() * 2 - 1);
-    aDensitySeed[i]  = Math.random();
-    aSizeSeed[i]     = Math.random();
-    aEnergySeed[i]   = Math.random();
-    aPhase[i]        = Math.random() * TAU;
-    aBand[i]         = Math.random() < 0.7 ? 0 : 1;
+    aRadialJitter[i] = Math.random() * 2 - 1;
+    aDensitySeed[i] = Math.random();
+    aSizeSeed[i] = Math.random();
+    aEnergySeed[i] = Math.random();
+    aPhase[i] = Math.random() * TAU;
+    aBand[i] = Math.random() < 0.7 ? 0 : 1;
   }
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position',      new THREE.BufferAttribute(positions,     3));
-  geo.setAttribute('aTheta0',       new THREE.BufferAttribute(aTheta0,       1));
-  geo.setAttribute('aPhi0',         new THREE.BufferAttribute(aPhi0,         1));
-  geo.setAttribute('aSpeedTheta',   new THREE.BufferAttribute(aSpeedTheta,   1));
-  geo.setAttribute('aSpeedPhi',     new THREE.BufferAttribute(aSpeedPhi,     1));
-  geo.setAttribute('aRadialJitter', new THREE.BufferAttribute(aRadialJitter, 1));
-  geo.setAttribute('aDensitySeed',  new THREE.BufferAttribute(aDensitySeed,  1));
-  geo.setAttribute('aSizeSeed',     new THREE.BufferAttribute(aSizeSeed,     1));
-  geo.setAttribute('aEnergySeed',   new THREE.BufferAttribute(aEnergySeed,   1));
-  geo.setAttribute('aPhase',        new THREE.BufferAttribute(aPhase,        1));
-  geo.setAttribute('aBand',         new THREE.BufferAttribute(aBand,         1));
-
-  return geo;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('aTheta0', new THREE.BufferAttribute(aTheta0, 1));
+  geometry.setAttribute('aPhi0', new THREE.BufferAttribute(aPhi0, 1));
+  geometry.setAttribute('aSpeedTheta', new THREE.BufferAttribute(aSpeedTheta, 1));
+  geometry.setAttribute('aSpeedPhi', new THREE.BufferAttribute(aSpeedPhi, 1));
+  geometry.setAttribute('aThetaDirectionSeed', new THREE.BufferAttribute(aThetaDirectionSeed, 1));
+  geometry.setAttribute('aRadialJitter', new THREE.BufferAttribute(aRadialJitter, 1));
+  geometry.setAttribute('aDensitySeed', new THREE.BufferAttribute(aDensitySeed, 1));
+  geometry.setAttribute('aSizeSeed', new THREE.BufferAttribute(aSizeSeed, 1));
+  geometry.setAttribute('aEnergySeed', new THREE.BufferAttribute(aEnergySeed, 1));
+  geometry.setAttribute('aPhase', new THREE.BufferAttribute(aPhase, 1));
+  geometry.setAttribute('aBand', new THREE.BufferAttribute(aBand, 1));
+  return geometry;
 }
-
-/* ─────────────────── uniforms factory ─────────────────── */
 
 function createUniforms(tuning: PlasmaToroidTuning) {
-  return {
+  const config = getPlasmaToroidUniformConfig(tuning);
+  const uniforms: Record<string, { value: number }> = {
     uTime: { value: 0 },
-
-    uMajorRadius: { value: tuning.majorRadius },
-    uMinorRadius: { value: tuning.minorRadius },
-
-    uMajorNoiseAmp1:   { value: tuning.majorNoiseAmp1 },
-    uMajorNoiseAmp2:   { value: tuning.majorNoiseAmp2 },
-    uMajorNoiseFreq1:  { value: 3.0 },
-    uMajorNoiseFreq2:  { value: 5.0 },
-    uMajorNoiseSpeed1: { value: 0.4 },
-    uMajorNoiseSpeed2: { value: 0.6 },
-
-    uTubeNoiseAmp1:       { value: tuning.tubeNoiseAmp1 },
-    uTubeNoiseAmp2:       { value: tuning.tubeNoiseAmp2 },
-    uTubeNoiseAmp3:       { value: tuning.tubeNoiseAmp3 },
-    uTubeNoiseFreqTheta1: { value: 4.0 },
-    uTubeNoiseFreqTheta2: { value: 6.0 },
-    uTubeNoiseFreqTheta3: { value: 3.0 },
-    uTubeNoiseFreqPhi1:   { value: 2.0 },
-    uTubeNoiseFreqPhi2:   { value: 3.0 },
-    uTubeNoiseFreqPhi3:   { value: 5.0 },
-    uTubeNoiseSpeed1:     { value: 0.5 },
-    uTubeNoiseSpeed2:     { value: 0.7 },
-    uTubeNoiseSpeed3:     { value: 0.3 },
-
-    uDensityBase:       { value: tuning.densityBase },
-    uDensityAmp1:       { value: tuning.densityAmp1 },
-    uDensityAmp2:       { value: tuning.densityAmp2 },
-    uDensityFreqTheta1: { value: 3.0 },
-    uDensityFreqTheta2: { value: 5.0 },
-    uDensityFreqPhi1:   { value: 2.0 },
-    uDensityFreqPhi2:   { value: 3.0 },
-    uDensitySpeed1:     { value: 0.6 },
-    uDensitySpeed2:     { value: 0.4 },
-
-    uPointSize:         { value: tuning.pointSize },
-    uPointSizeVariance: { value: tuning.pointSizeVariance },
-    uAlpha:             { value: tuning.alpha },
-    uSoftness:          { value: tuning.softness },
-
-    uHaloSpread: { value: tuning.haloSpread },
   };
+
+  for (const [key, value] of Object.entries(config)) {
+    uniforms[key] = { value };
+  }
+
+  return uniforms;
 }
 
-/* ─────────────────── React components ─────────────────── */
+function applyUniforms(
+  uniforms: Record<string, { value: number }>,
+  tuning: PlasmaToroidTuning,
+) {
+  const config = getPlasmaToroidUniformConfig(tuning);
+  for (const [key, value] of Object.entries(config)) {
+    uniforms[key].value = value;
+  }
+}
 
 function PlasmaToroidPoints({ tuning }: { tuning: PlasmaToroidTuning }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -316,37 +384,17 @@ function PlasmaToroidPoints({ tuning }: { tuning: PlasmaToroidTuning }) {
 
   const uniforms = useMemo(
     () => createUniforms(tuning),
-    // Only rebuild uniforms when particle count changes (geometry rebuild)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [tuning.particleCount],
   );
 
   useFrame(({ clock }) => {
-    const mat = materialRef.current;
-    if (!mat) return;
+    const material = materialRef.current;
+    if (!material) {
+      return;
+    }
 
-    mat.uniforms.uTime.value = clock.getElapsedTime();
-
-    // Live-update tunable uniforms
-    mat.uniforms.uMajorRadius.value     = tuning.majorRadius;
-    mat.uniforms.uMinorRadius.value     = tuning.minorRadius;
-
-    mat.uniforms.uMajorNoiseAmp1.value  = tuning.majorNoiseAmp1;
-    mat.uniforms.uMajorNoiseAmp2.value  = tuning.majorNoiseAmp2;
-
-    mat.uniforms.uTubeNoiseAmp1.value   = tuning.tubeNoiseAmp1;
-    mat.uniforms.uTubeNoiseAmp2.value   = tuning.tubeNoiseAmp2;
-    mat.uniforms.uTubeNoiseAmp3.value   = tuning.tubeNoiseAmp3;
-
-    mat.uniforms.uDensityBase.value     = tuning.densityBase;
-    mat.uniforms.uDensityAmp1.value     = tuning.densityAmp1;
-    mat.uniforms.uDensityAmp2.value     = tuning.densityAmp2;
-
-    mat.uniforms.uPointSize.value       = tuning.pointSize;
-    mat.uniforms.uPointSizeVariance.value = tuning.pointSizeVariance;
-    mat.uniforms.uAlpha.value           = tuning.alpha;
-    mat.uniforms.uSoftness.value        = tuning.softness;
-    mat.uniforms.uHaloSpread.value      = tuning.haloSpread;
+    material.uniforms.uTime.value = clock.getElapsedTime();
+    applyUniforms(material.uniforms as Record<string, { value: number }>, tuning);
   });
 
   return (
@@ -364,8 +412,6 @@ function PlasmaToroidPoints({ tuning }: { tuning: PlasmaToroidTuning }) {
   );
 }
 
-/* ─────────────────── exported scene / page ─────────────────── */
-
 export interface PlasmaToroidDemoSceneProps {
   showDebugOverlay?: boolean;
 }
@@ -375,10 +421,57 @@ export interface PlasmaToroidDemoPageProps extends PlasmaToroidDemoSceneProps {
   showLegend?: boolean;
 }
 
-export function PlasmaToroidDemoScene({
+type CameraPreset = {
+  position: [number, number, number];
+  up?: [number, number, number];
+};
+
+function PlasmaToroidSceneContents({
   showDebugOverlay = true,
 }: PlasmaToroidDemoSceneProps) {
-  const tuning = usePlasmaToroidInspector(DEFAULT_PLASMA_TOROID_TUNING);
+  const { camera } = useThree();
+  const controlsRef = useRef<any>(null);
+
+  const applyCameraPreset = useCallback(
+    (preset: CameraPreset) => {
+      camera.position.set(...preset.position);
+      if (preset.up) {
+        camera.up.set(...preset.up);
+      } else {
+        camera.up.set(0, 1, 0);
+      }
+      camera.lookAt(0, 0, 0);
+      controlsRef.current?.target.set(0, 0, 0);
+      controlsRef.current?.update();
+    },
+    [camera],
+  );
+
+  const setFrontView = useCallback(() => {
+    applyCameraPreset({ position: [0, 0.55, 5.8] });
+  }, [applyCameraPreset]);
+
+  const setSideView = useCallback(() => {
+    applyCameraPreset({ position: [5.8, 0.4, 0.01] });
+  }, [applyCameraPreset]);
+
+  const setAxisView = useCallback(() => {
+    applyCameraPreset({
+      position: [0.01, 5.8, 0],
+      up: [0, 0, -1],
+    });
+  }, [applyCameraPreset]);
+
+  const setIsometricView = useCallback(() => {
+    applyCameraPreset({ position: [4.5, 2.6, 4.5] });
+  }, [applyCameraPreset]);
+
+  const tuning = usePlasmaToroidInspector(DEFAULT_PLASMA_TOROID_TUNING, {
+    setFrontView,
+    setSideView,
+    setAxisView,
+    setIsometricView,
+  });
 
   return (
     <>
@@ -386,16 +479,23 @@ export function PlasmaToroidDemoScene({
       <fog attach="fog" args={['#020010', 8, 20]} />
       <PlasmaToroidPoints tuning={tuning} />
       <OrbitControls
+        ref={controlsRef}
         enableDamping
         dampingFactor={0.05}
         minDistance={1.5}
         maxDistance={12}
-        autoRotate
-        autoRotateSpeed={tuning.autoRotateSpeed}
+        autoRotate={tuning.camera.autoRotate}
+        autoRotateSpeed={tuning.camera.autoRotateSpeed}
       />
       {showDebugOverlay ? <DebugOverlay /> : null}
     </>
   );
+}
+
+export function PlasmaToroidDemoScene({
+  showDebugOverlay = true,
+}: PlasmaToroidDemoSceneProps) {
+  return <PlasmaToroidSceneContents showDebugOverlay={showDebugOverlay} />;
 }
 
 export function PlasmaToroidDemoPage({
@@ -405,7 +505,9 @@ export function PlasmaToroidDemoPage({
 }: PlasmaToroidDemoPageProps) {
   return (
     <PageLayout background={background}>
+      <DebugPanel position="left" />
       <Canvas
+        style={{ flex: 1 }}
         camera={{ fov: 50, near: 0.1, far: 50, position: [0, 1.5, 4.5] }}
         gl={{ antialias: true }}
       >
@@ -415,17 +517,18 @@ export function PlasmaToroidDemoPage({
         <div className={styles.legend}>
           <div className={styles.legendItem}>
             <span className={styles.dot} style={{ background: '#5a9fff' }} />
-            Core band · GPU torus parameterization
+            Core band · local toroid wobble field
           </div>
           <div className={styles.legendItem}>
             <span className={styles.dot} style={{ background: '#c0e8ff' }} />
-            Halo band · density-gated particles
+            XYZ warp · axis-safe asymmetry layer
           </div>
           <div className={styles.legendItem}>
-            Press ` to open Inspector &middot; Controls tab
+            Press ` to open Inspector · Controls tab
           </div>
         </div>
       ) : null}
+      <DebugPanel position="right" />
     </PageLayout>
   );
 }

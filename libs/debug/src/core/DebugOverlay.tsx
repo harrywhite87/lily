@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import type { DragEvent, PointerEvent } from 'react';
 import { Html } from '@react-three/drei';
 import { useDebugStore } from './store';
-import type { FloatingInspector } from './store';
+import type { FloatingInspector, DockMode } from './store';
 import { useR3FAdapter } from '../r3f/useR3FAdapter';
 import { useSelectionHighlight } from '../r3f/useSelectionHighlight';
 import { TransformGizmo } from '../r3f/TransformGizmo';
@@ -11,6 +11,7 @@ import { MetricsPanel } from '../panels/MetricsPanel';
 import { SceneGraphPanel } from '../panels/SceneGraphPanel';
 import { ControlsPanel } from '../controls/ControlsPanel';
 import { ObjectInspectorPanel } from '../panels/ObjectInspectorPanel';
+import { ResizeHandle } from './ResizeHandle';
 import type { DebugPlugin, DebugPanelRegistration } from './types';
 import styles from './DebugOverlay.module.scss';
 
@@ -215,29 +216,100 @@ function DetachedInspector({
   );
 }
 
-type DockMode = 'left' | 'right' | 'float';
-
 const DOCK_OPTIONS: { mode: DockMode; label: string }[] = [
   { mode: 'left', label: 'Left' },
   { mode: 'right', label: 'Right' },
   { mode: 'float', label: 'Float' },
 ];
 
-export interface DebugOverlayProps {
+/* ─────────────────────────────────────────────────────────
+ * Shared panel content — used by both float overlay (inside
+ * Html) and push-layout DebugPanel (outside Canvas).
+ * ───────────────────────────────────────────────────────── */
+
+function DebugPanelContent({
+  panels,
+  isFloating,
+  drag,
+}: {
+  panels: DebugPanelRegistration[];
+  isFloating: boolean;
+  drag?: ReturnType<typeof useDraggable>;
+}) {
+  const setOpen = useDebugStore((s) => s.setOpen);
+  const dockMode = useDebugStore((s) => s.dockMode);
+  const setDockMode = useDebugStore((s) => s.setDockMode);
+
+  return (
+    <>
+      <div
+        className={`${styles.header} ${isFloating ? styles.headerDraggable : ''}`}
+        onPointerDown={isFloating ? drag?.onPointerDown : undefined}
+        onPointerMove={isFloating ? drag?.onPointerMove : undefined}
+        onPointerUp={isFloating ? drag?.onPointerUp : undefined}
+      >
+        <div className={styles.title}>Inspector</div>
+        <div className={styles.headerActions}>
+          <div
+            className={styles.dockSwitcher}
+            role="group"
+            aria-label="Dock inspector"
+          >
+            {DOCK_OPTIONS.map((option) => (
+              <button
+                key={option.mode}
+                className={`${styles.dockBtn} ${dockMode === option.mode ? styles.dockBtnActive : ''}`}
+                onClick={() => setDockMode(option.mode)}
+                title={`Dock ${option.label.toLowerCase()}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <button
+            className={styles.closeBtn}
+            onClick={() => setOpen(false)}
+            title="Close (Esc)"
+          >
+            x
+          </button>
+        </div>
+      </div>
+
+      <Tabs panels={panels} />
+
+      <div className={styles.panelHost}>
+        <PanelHost panels={panels} />
+      </div>
+
+      <div className={styles.footer}>
+        <code>`</code> toggle &nbsp;|&nbsp; <code>Esc</code> close
+      </div>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+ * DebugBridge — lives INSIDE <Canvas>.
+ * Runs R3F hooks, renders TransformGizmo. When in float mode
+ * it also renders the panel content via <Html>.
+ * ───────────────────────────────────────────────────────── */
+
+export interface DebugBridgeProps {
   plugins?: DebugPlugin[];
   sceneGraphHz?: number;
 }
 
-export function DebugOverlay({
+export function DebugBridge({
   plugins = [],
   sceneGraphHz = 6,
-}: DebugOverlayProps) {
+}: DebugBridgeProps) {
   useHotkeys();
   useR3FAdapter({ sceneGraphHz });
   useSelectionHighlight();
 
   const isOpen = useDebugStore((s) => s.isOpen);
-  const setOpen = useDebugStore((s) => s.setOpen);
+  const dockMode = useDebugStore((s) => s.dockMode);
   const activePanelId = useDebugStore((s) => s.activePanelId);
   const sceneGraph = useDebugStore((s) => s.sceneGraph);
   const floatingInspectors = useDebugStore((s) => s.floatingInspectors);
@@ -250,16 +322,9 @@ export function DebugOverlay({
   const setSelectedObjectUuid = useDebugStore((s) => s.setSelectedObjectUuid);
 
   const drag = useDraggable();
-  const [dockMode, setDockMode] = useState<DockMode>('right');
+  const isFloating = dockMode === 'float';
 
   const panels = useMemo(() => normalizePlugins(plugins), [plugins]);
-  const isFloating = dockMode === 'float';
-  const overlayModeClassName =
-    dockMode === 'left'
-      ? styles.overlayLeft
-      : dockMode === 'right'
-        ? styles.overlayRight
-        : styles.overlayFloat;
 
   useEffect(() => {
     if (!panels.some((panel) => panel.id === activePanelId)) {
@@ -315,91 +380,140 @@ export function DebugOverlay({
   return (
     <>
       <TransformGizmo />
-      <Html
-        fullscreen
-        style={{ pointerEvents: 'none' }}
-        zIndexRange={[9999, 9999]}
-      >
-        <div className={styles.root}>
-          {draggedSceneNodeUuid && (
-            <div
-              className={styles.sceneDropTarget}
-              onDragOver={onSceneDragOver}
-              onDrop={onSceneDrop}
-              onDragLeave={onSceneDragLeave}
-            >
-              Drop anywhere to pin this object inspector
-            </div>
-          )}
 
-          <div
-            className={`${styles.overlay} ${overlayModeClassName}`}
-            style={{
-              pointerEvents: 'auto',
-              ...(isFloating
-                ? { transform: `translate(${drag.offset.x}px, ${drag.offset.y}px)` }
-                : null),
-            }}
-            onPointerDown={(event) => event.stopPropagation()}
-            onKeyDown={(event) => event.stopPropagation()}
-            onWheel={(event) => event.stopPropagation()}
-          >
-            <div
-              className={`${styles.header} ${isFloating ? styles.headerDraggable : ''}`}
-              onPointerDown={isFloating ? drag.onPointerDown : undefined}
-              onPointerMove={isFloating ? drag.onPointerMove : undefined}
-              onPointerUp={isFloating ? drag.onPointerUp : undefined}
-            >
-              <div className={styles.title}>Inspector</div>
-              <div className={styles.headerActions}>
-                <div
-                  className={styles.dockSwitcher}
-                  role="group"
-                  aria-label="Dock inspector"
-                >
-                  {DOCK_OPTIONS.map((option) => (
-                    <button
-                      key={option.mode}
-                      className={`${styles.dockBtn} ${dockMode === option.mode ? styles.dockBtnActive : ''}`}
-                      onClick={() => setDockMode(option.mode)}
-                      title={`Dock ${option.label.toLowerCase()}`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  className={styles.closeBtn}
-                  onClick={() => setOpen(false)}
-                  title="Close (Esc)"
-                >
-                  x
-                </button>
+      {/* Float mode: render entire panel in Html overlay (old behavior) */}
+      {isFloating && (
+        <Html
+          fullscreen
+          style={{ pointerEvents: 'none' }}
+          zIndexRange={[9999, 9999]}
+        >
+          <div className={styles.root}>
+            {draggedSceneNodeUuid && (
+              <div
+                className={styles.sceneDropTarget}
+                onDragOver={onSceneDragOver}
+                onDrop={onSceneDrop}
+                onDragLeave={onSceneDragLeave}
+              >
+                Drop anywhere to pin this object inspector
               </div>
+            )}
+
+            <div
+              className={`${styles.overlay} ${styles.overlayFloat}`}
+              style={{
+                pointerEvents: 'auto',
+                transform: `translate(${drag.offset.x}px, ${drag.offset.y}px)`,
+              }}
+              onPointerDown={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+              onWheel={(event) => event.stopPropagation()}
+            >
+              <DebugPanelContent panels={panels} isFloating drag={drag} />
             </div>
 
-            <Tabs panels={panels} />
-
-            <div className={styles.panelHost}>
-              <PanelHost panels={panels} />
-            </div>
-
-            <div className={styles.footer}>
-              <code>`</code> toggle &nbsp;|&nbsp; <code>Esc</code> close
+            <div className={styles.detachedLayer}>
+              {floatingInspectors.map((panel, index) => (
+                <DetachedInspector
+                  key={panel.uuid}
+                  panel={panel}
+                  stackIndex={index}
+                />
+              ))}
             </div>
           </div>
+        </Html>
+      )}
 
-          <div className={styles.detachedLayer}>
-            {floatingInspectors.map((panel, index) => (
-              <DetachedInspector
-                key={panel.uuid}
-                panel={panel}
-                stackIndex={index}
-              />
-            ))}
+      {/* Docked mode: render floating inspectors + drop target only via Html */}
+      {!isFloating && (
+        <Html
+          fullscreen
+          style={{ pointerEvents: 'none' }}
+          zIndexRange={[9999, 9999]}
+        >
+          <div className={styles.root}>
+            {draggedSceneNodeUuid && (
+              <div
+                className={styles.sceneDropTarget}
+                onDragOver={onSceneDragOver}
+                onDrop={onSceneDrop}
+                onDragLeave={onSceneDragLeave}
+              >
+                Drop anywhere to pin this object inspector
+              </div>
+            )}
+
+            <div className={styles.detachedLayer}>
+              {floatingInspectors.map((panel, index) => (
+                <DetachedInspector
+                  key={panel.uuid}
+                  panel={panel}
+                  stackIndex={index}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </Html>
+        </Html>
+      )}
     </>
   );
+}
+
+/* ─────────────────────────────────────────────────────────
+ * DebugPanel — lives OUTSIDE <Canvas> as a sibling.
+ * Renders the push-layout sidebar with resize handle.
+ * Only renders when docked to the matching `position` side.
+ * ───────────────────────────────────────────────────────── */
+
+export interface DebugPanelProps {
+  position: 'left' | 'right';
+  plugins?: DebugPlugin[];
+}
+
+export function DebugPanel({ position, plugins = [] }: DebugPanelProps) {
+  const isOpen = useDebugStore((s) => s.isOpen);
+  const dockMode = useDebugStore((s) => s.dockMode);
+  const sidebarWidth = useDebugStore((s) => s.sidebarWidth);
+
+  const panels = useMemo(() => normalizePlugins(plugins), [plugins]);
+
+  // Only render when docked to this position
+  if (!isOpen || dockMode !== position) return null;
+
+  const sideClass = position === 'left' ? styles.panelLeft : styles.panelRight;
+
+  return (
+    <div
+      className={`${styles.panel} ${sideClass}`}
+      style={{ width: sidebarWidth }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
+    >
+      <ResizeHandle />
+      <div className={styles.panelInner}>
+        <DebugPanelContent panels={panels} isFloating={false} />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+ * DebugOverlay — backward-compatible wrapper.
+ * Renders DebugBridge inside Canvas (for the old pattern where
+ * everything was inside <Canvas>).
+ * ───────────────────────────────────────────────────────── */
+
+export interface DebugOverlayProps {
+  plugins?: DebugPlugin[];
+  sceneGraphHz?: number;
+}
+
+export function DebugOverlay({
+  plugins = [],
+  sceneGraphHz = 6,
+}: DebugOverlayProps) {
+  return <DebugBridge plugins={plugins} sceneGraphHz={sceneGraphHz} />;
 }

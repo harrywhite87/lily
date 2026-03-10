@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { DebugOverlay } from '@lilypad/debug';
+import { DebugBridge, DebugPanel } from '@lilypad/debug';
 import { CameraRig } from './CameraRig';
 import { Lighting } from './Lighting';
 import { Submarine } from './Submarine';
@@ -32,11 +32,14 @@ export function SceneOverlay({
         inset: 0,
         zIndex: 10,
         pointerEvents: 'none',
+        display: 'flex',
+        flexDirection: 'row',
       }}
     >
+      <DebugPanel position="left" />
       <Canvas
         camera={{ fov: 50, near: 0.1, far: 1000, position: [0, 0, 8] }}
-        style={{ pointerEvents: 'none' }}
+        style={{ pointerEvents: 'none', flex: 1 }}
         gl={{ alpha: true, antialias: true }}
       >
         <CameraRig />
@@ -44,8 +47,9 @@ export function SceneOverlay({
         <Submarine />
         <WaterSurface overrides={waterOverrides} />
         <Caustics overrides={causticsOverrides} />
-        <DebugOverlay />
+        <DebugBridge />
       </Canvas>
+      <DebugPanel position="right" />
     </div>
   );
 }

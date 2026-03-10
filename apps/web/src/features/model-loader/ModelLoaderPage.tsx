@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
-import { DebugOverlay, useDebugControls } from '@lilypad/debug';
+import { DebugBridge, DebugPanel, useDebugControls } from '@lilypad/debug';
 import { AssetsPlugin } from '@lilypad/debug-assets';
 import { useAssetRegistry } from '@lilypad/three-assets';
 import { useNavigate } from 'react-router-dom';
@@ -74,6 +74,8 @@ export function ModelLoaderPage() {
     >
       {dragOver && <div className={styles.dropHint}>Drop .glb here</div>}
 
+      <DebugPanel position="left" plugins={[AssetsPlugin(manager)]} />
+
       <input
         ref={fileInputRef}
         type="file"
@@ -83,6 +85,7 @@ export function ModelLoaderPage() {
       />
 
       <Canvas
+        style={{ flex: 1 }}
         camera={{ position: [0.94, 0.81, -1.35], fov: 50, near: 0.10, far: 1000 }}
         gl={{ alpha: false, antialias: true }}
       >
@@ -98,8 +101,10 @@ export function ModelLoaderPage() {
           autoRotate={viewport.autoRotate as boolean}
           autoRotateSpeed={viewport.autoRotateSpeed as number}
         />
-        <DebugOverlay plugins={[AssetsPlugin(manager)]} />
+        <DebugBridge plugins={[AssetsPlugin(manager)]} />
       </Canvas>
+
+      <DebugPanel position="right" plugins={[AssetsPlugin(manager)]} />
     </PageLayout>
   );
 }

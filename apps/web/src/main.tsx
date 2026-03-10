@@ -11,7 +11,7 @@ import './global.scss';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PasswordGate>
+    {/* <PasswordGate> */}
       <ThemeProvider>
         <HashRouter>
           <AssetRegistryProvider>
@@ -23,6 +23,6 @@ createRoot(document.getElementById('root')!).render(
           </AssetRegistryProvider>
         </HashRouter>
       </ThemeProvider>
-    </PasswordGate>
+    {/* </PasswordGate> */}
   </StrictMode>
 );

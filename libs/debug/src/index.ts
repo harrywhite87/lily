@@ -1,7 +1,8 @@
 /* ─── Public API ─── */
 
-export { DebugOverlay } from './core/DebugOverlay';
+export { DebugOverlay, DebugBridge, DebugPanel } from './core/DebugOverlay';
 export { useDebug, useDebugStore } from './core/store';
+export type { DockMode } from './core/store';
 export { useDebugControls } from './controls/useDebugControls';
 export {
   OBJECT_INSPECTOR_SURFACE_KEY,

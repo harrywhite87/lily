@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { DebugOverlay, useDebugControls } from '@lilypad/debug';
+import { DebugBridge, DebugPanel, useDebugControls } from '@lilypad/debug';
 import type { FolderControl } from '@lilypad/debug';
 import { PageLayout } from '@lilypad/page-layout';
 import { ParticlesMorph } from '@lilypad/three-particles';
@@ -355,6 +355,7 @@ export function ParticlesPage({
 
   return (
     <PageLayout background={background}>
+      <DebugPanel position="left" />
       <input
         ref={fromInputRef}
         type="file"
@@ -370,6 +371,7 @@ export function ParticlesPage({
         onChange={handleToChange}
       />
       <Canvas
+        style={{ flex: 1 }}
         camera={{ fov: 50, near: 0.1, far: 100, position: [0, 0, 4] }}
         gl={{ alpha: false, antialias: true }}
       >
@@ -405,8 +407,9 @@ export function ParticlesPage({
           />
         ) : null}
         <OrbitControls makeDefault enableDamping dampingFactor={0.08} />
-        <DebugOverlay />
+        <DebugBridge />
       </Canvas>
+      <DebugPanel position="right" />
     </PageLayout>
   );
 }

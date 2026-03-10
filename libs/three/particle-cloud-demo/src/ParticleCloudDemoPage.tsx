@@ -3,7 +3,7 @@ import { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { DebugOverlay } from '@lilypad/debug';
+import { DebugOverlay, DebugPanel } from '@lilypad/debug';
 import { PageLayout } from '@lilypad/page-layout';
 import {
   ParticleCloud,
@@ -144,7 +144,9 @@ export function ParticleCloudDemoPage({
 }: ParticleCloudDemoPageProps) {
   return (
     <PageLayout background={background}>
+      <DebugPanel position="left" />
       <Canvas
+        style={{ flex: 1 }}
         camera={{ fov: 50, near: 0.1, far: 100, position: [0, 2, 7] }}
         gl={{ antialias: true }}
       >
@@ -168,6 +170,7 @@ export function ParticleCloudDemoPage({
           </div>
         </div>
       ) : null}
+      <DebugPanel position="right" />
     </PageLayout>
   );
 }

@@ -14,3 +14,10 @@ export {
 } from './usePlasmaToroidInspector';
 
 export type { PlasmaToroidTuning } from './usePlasmaToroidInspector';
+
+export {
+  TAU,
+  getPlasmaToroidUniformConfig,
+  sampleToroidField,
+  sampleWaveChannel,
+} from './plasmaToroidField';

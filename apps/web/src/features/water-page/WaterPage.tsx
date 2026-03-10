@@ -1,12 +1,12 @@
 import { Suspense, useRef, useCallback, useEffect, type ChangeEvent } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { DebugOverlay, useDebugControls } from '@lilypad/debug';
+import { DebugBridge, DebugPanel, useDebugControls } from '@lilypad/debug';
 import type { FolderControl } from '@lilypad/debug';
 import * as THREE from 'three';
-import { WaterSurface } from '../shaders/WaterSurface';
+import { WaterSurface, HULL_INTERACTION_DEFAULTS } from '../shaders/WaterSurface';
 import { useShaderConfig, WATER_DEFAULTS } from '../config/ShaderConfigContext';
-import type { WaterOverrides } from '../shaders/WaterSurface';
+import type { WaterOverrides, HullInteractionTuning } from '../shaders/WaterSurface';
 import { type HullDebugInfo } from '../shaders/WaterSurface';
 import { SkyDome } from '../shaders/SkyDome';
 import { WaveSubmarine } from './WaveSubmarine';
@@ -23,6 +23,10 @@ export function WaterPage() {
     width: 0,
     heading: 0,
     show: false,
+    velocity: new THREE.Vector2(0, 0),
+    speed: 0,
+    heaveVelocity: 0,
+    active: true,
   });
 
   const handleImport = useCallback(
@@ -100,6 +104,55 @@ export function WaterPage() {
     },
   });
 
+  /* ── Hull interaction tuning ── */
+  const D = HULL_INTERACTION_DEFAULTS;
+  const interactionTuningRef = useRef<HullInteractionTuning>({ ...D });
+
+  const [interactionCtrl] = useDebugControls(
+    'Hull Interaction',
+    () => ({
+      Displacement: {
+        type: 'folder' as const,
+        title: 'Displacement',
+        controls: {
+          bodyDispAmp:    { value: D.bodyDispAmp,    min: 0.0, max: 1.0, step: 0.005 },
+          edgeDispAmp:    { value: D.edgeDispAmp,    min: 0.0, max: 0.5, step: 0.005 },
+          bobRippleAmp:   { value: D.bobRippleAmp,   min: 0.0, max: 0.2, step: 0.001 },
+        },
+      } satisfies FolderControl,
+      Wake: {
+        type: 'folder' as const,
+        title: 'Wake',
+        controls: {
+          wakeDispAmp:    { value: D.wakeDispAmp,    min: 0.0, max: 0.5, step: 0.005 },
+          kelvinDispAmp:  { value: D.kelvinDispAmp,  min: 0.0, max: 0.2, step: 0.002 },
+          speedNorm:      { value: D.speedNorm,      min: 0.5, max: 20.0, step: 0.25 },
+        },
+      } satisfies FolderControl,
+      Shading: {
+        type: 'folder' as const,
+        title: 'Shading',
+        controls: {
+          aerationStrength: { value: D.aerationStrength, min: 0.0, max: 0.5, step: 0.005 },
+        },
+      } satisfies FolderControl,
+    }),
+    [],
+  );
+
+  // Sync interaction controls into the ref each render
+  useEffect(() => {
+    const c = interactionCtrl as Record<string, unknown>;
+    const t = interactionTuningRef.current;
+    t.bodyDispAmp      = (c.bodyDispAmp as number)      ?? D.bodyDispAmp;
+    t.edgeDispAmp      = (c.edgeDispAmp as number)      ?? D.edgeDispAmp;
+    t.bobRippleAmp     = (c.bobRippleAmp as number)     ?? D.bobRippleAmp;
+    t.wakeDispAmp      = (c.wakeDispAmp as number)      ?? D.wakeDispAmp;
+    t.kelvinDispAmp    = (c.kelvinDispAmp as number)    ?? D.kelvinDispAmp;
+    t.speedNorm        = (c.speedNorm as number)        ?? D.speedNorm;
+    t.aerationStrength = (c.aerationStrength as number) ?? D.aerationStrength;
+  }, [interactionCtrl]);
+
   // Sync slider changes to global config (skip initial mount)
   const mountedRef = useRef(false);
   useEffect(() => {
@@ -116,6 +169,7 @@ export function WaterPage() {
 
   return (
     <PageLayout background="var(--color-deep-navy)">
+      <DebugPanel position="left" />
       <input
         ref={importRef}
         type="file"
@@ -124,6 +178,7 @@ export function WaterPage() {
         onChange={handleImport}
       />
       <Canvas
+        style={{ flex: 1 }}
         camera={{ fov: 55, near: 0.1, far: 5000, position: [0, 2.2, 6] }}
         gl={{ alpha: false, antialias: true }}
         onCreated={({ gl }) => {
@@ -147,7 +202,7 @@ export function WaterPage() {
           />
           <ambientLight intensity={0.25} />
           <directionalLight position={[5, 10, 5]} intensity={0.5} />
-          <WaterSurface standalone overrides={waterOverrides} debugHull={hullDebugRef} />
+          <WaterSurface standalone overrides={waterOverrides} debugHull={hullDebugRef} interactionTuning={interactionTuningRef} />
           <WaveSubmarine overrides={waterOverrides} debugHull={hullDebugRef} />
         </Suspense>
         <OrbitControls
@@ -158,8 +213,9 @@ export function WaterPage() {
           minDistance={2}
           maxDistance={60}
         />
-        <DebugOverlay />
+        <DebugBridge />
       </Canvas>
+      <DebugPanel position="right" />
     </PageLayout>
   );
 }

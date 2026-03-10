@@ -1,114 +1,356 @@
+import { useCallback, useRef } from 'react';
 import { useDebugControls } from '@lilypad/debug';
-import type { FlatValues } from '@lilypad/debug';
+import type { FlatValues, FolderControl } from '@lilypad/debug';
+import type { PlasmaToroidTuning, PlasmaToroidWaveChannel } from './plasmaToroidTuning';
+import { DEFAULT_PLASMA_TOROID_TUNING } from './plasmaToroidTuning';
 
-/* ─────────────────── tuning type ─────────────────── */
+export type { PlasmaToroidTuning } from './plasmaToroidTuning';
+export { DEFAULT_PLASMA_TOROID_TUNING } from './plasmaToroidTuning';
 
-export interface PlasmaToroidTuning {
-  particleCount: number;
-  majorRadius: number;
-  minorRadius: number;
-
-  majorNoiseAmp1: number;
-  majorNoiseAmp2: number;
-
-  tubeNoiseAmp1: number;
-  tubeNoiseAmp2: number;
-  tubeNoiseAmp3: number;
-
-  densityBase: number;
-  densityAmp1: number;
-  densityAmp2: number;
-
-  pointSize: number;
-  pointSizeVariance: number;
-  alpha: number;
-  softness: number;
-  haloSpread: number;
-
-  autoRotateSpeed: number;
+export interface PlasmaToroidInspectorActions {
+  setFrontView?: () => void;
+  setSideView?: () => void;
+  setAxisView?: () => void;
+  setIsometricView?: () => void;
 }
-
-export const DEFAULT_PLASMA_TOROID_TUNING: PlasmaToroidTuning = {
-  particleCount: 40_000,
-  majorRadius: 1.4,
-  minorRadius: 0.32,
-
-  majorNoiseAmp1: 0.05,
-  majorNoiseAmp2: 0.025,
-
-  tubeNoiseAmp1: 0.06,
-  tubeNoiseAmp2: 0.035,
-  tubeNoiseAmp3: 0.02,
-
-  densityBase: 0.58,
-  densityAmp1: 0.24,
-  densityAmp2: 0.16,
-
-  pointSize: 6.0,
-  pointSizeVariance: 0.45,
-  alpha: 0.8,
-  softness: 1.0,
-  haloSpread: 0.07,
-
-  autoRotateSpeed: 0.4,
-};
-
-/* ─────────────────── hook ─────────────────── */
 
 export function usePlasmaToroidInspector(
   initial: PlasmaToroidTuning = DEFAULT_PLASMA_TOROID_TUNING,
+  actions: PlasmaToroidInspectorActions = {},
 ): PlasmaToroidTuning {
-  const values = useDebugControls('Plasma Toroid', {
-    particleCount:   { value: initial.particleCount,   min: 5000,  max: 120_000, step: 5000 },
-    majorRadius:     { value: initial.majorRadius,     min: 0.5,   max: 4.0,     step: 0.05 },
-    minorRadius:     { value: initial.minorRadius,     min: 0.05,  max: 1.5,     step: 0.01 },
+  const setValuesRef = useRef<(values: Partial<FlatValues>) => void>(() => undefined);
 
-    majorNoiseAmp1:  { value: initial.majorNoiseAmp1,  min: 0,     max: 0.3,     step: 0.005 },
-    majorNoiseAmp2:  { value: initial.majorNoiseAmp2,  min: 0,     max: 0.2,     step: 0.005 },
+  const applyViewPreset = useCallback((apply?: () => void) => {
+    apply?.();
+    setValuesRef.current({ cam_autoRotate: false });
+  }, []);
 
-    tubeNoiseAmp1:   { value: initial.tubeNoiseAmp1,   min: 0,     max: 0.3,     step: 0.005 },
-    tubeNoiseAmp2:   { value: initial.tubeNoiseAmp2,   min: 0,     max: 0.2,     step: 0.005 },
-    tubeNoiseAmp3:   { value: initial.tubeNoiseAmp3,   min: 0,     max: 0.15,    step: 0.005 },
+  const resetTuning = useCallback(() => {
+    setValuesRef.current(tuningToControlValues(initial));
+  }, [initial]);
 
-    densityBase:     { value: initial.densityBase,     min: 0.1,   max: 1.0,     step: 0.01 },
-    densityAmp1:     { value: initial.densityAmp1,     min: 0,     max: 0.5,     step: 0.01 },
-    densityAmp2:     { value: initial.densityAmp2,     min: 0,     max: 0.4,     step: 0.01 },
+  const [values, setValues] = useDebugControls(
+    'Plasma Toroid',
+    () => ({
+      Geometry: {
+        type: 'folder' as const,
+        title: 'Geometry',
+        controls: {
+          geo_particleCount: numberControl(initial.particleCount, 5_000, 120_000, 5_000, 'Particles'),
+          geo_majorRadius: numberControl(initial.geometry.majorRadius, 0.5, 4.0, 0.05, 'Major Radius'),
+          geo_minorRadius: numberControl(initial.geometry.minorRadius, 0.05, 1.5, 0.01, 'Minor Radius'),
+          geo_haloSpread: numberControl(initial.geometry.haloSpread, 0, 0.35, 0.005, 'Halo Spread'),
+        },
+      } satisfies FolderControl,
+      Orbit: {
+        type: 'folder' as const,
+        title: 'Orbit',
+        controls: {
+          orbit_theta_direction: {
+            type: 'select' as const,
+            value: initial.orbit.aroundRingDirection,
+            options: ['forward', 'reverse', 'mixed'],
+            label: 'Ring Direction',
+          },
+          orbit_theta_speed: numberControl(initial.orbit.aroundRingSpeed, 0, 4, 0.05, 'Around Ring Speed'),
+          orbit_phi_speed: numberControl(initial.orbit.aroundTubeSpeed, 0, 4, 0.05, 'Around Tube Speed'),
+        },
+      } satisfies FolderControl,
+      Flow: {
+        type: 'folder' as const,
+        title: 'Flow',
+        controls: {
+          flow_theta_amp: numberControl(initial.flow.thetaDrift.amplitude, 0, 0.3, 0.005, 'Theta Amp'),
+          flow_theta_freq_theta: numberControl(initial.flow.thetaDrift.thetaFrequency, 0, 10, 0.1, 'Theta Freq T'),
+          flow_theta_freq_phi: numberControl(initial.flow.thetaDrift.phiFrequency, 0, 10, 0.1, 'Theta Freq P'),
+          flow_theta_speed: numberControl(initial.flow.thetaDrift.speed, 0, 3, 0.05, 'Theta Speed'),
+          flow_phi_amp: numberControl(initial.flow.phiDrift.amplitude, 0, 0.3, 0.005, 'Phi Amp'),
+          flow_phi_freq_theta: numberControl(initial.flow.phiDrift.thetaFrequency, 0, 10, 0.1, 'Phi Freq T'),
+          flow_phi_freq_phi: numberControl(initial.flow.phiDrift.phiFrequency, 0, 10, 0.1, 'Phi Freq P'),
+          flow_phi_speed: numberControl(initial.flow.phiDrift.speed, 0, 3, 0.05, 'Phi Speed'),
+        },
+      } satisfies FolderControl,
+      Wobble: {
+        type: 'folder' as const,
+        title: 'Wobble Local',
+        controls: {
+          'Ring Radius': waveFolder('Ring Radius', 'wobble_ring', initial.wobble.ring, 0.25),
+          Radial: waveFolder('Radial', 'wobble_radial', initial.wobble.radial, 0.35),
+          Binormal: waveFolder('Binormal', 'wobble_binormal', initial.wobble.binormal, 0.35),
+          Tangent: waveFolder('Tangent', 'wobble_tangent', initial.wobble.tangent, 0.25),
+        },
+      } satisfies FolderControl,
+      Warp: {
+        type: 'folder' as const,
+        title: 'Warp XYZ',
+        controls: {
+          warp_enabled: { value: initial.warp.enabled, label: 'Enabled' },
+          warp_amp_x: numberControl(initial.warp.amount.x, 0, 0.3, 0.005, 'X Amp'),
+          warp_amp_y: numberControl(initial.warp.amount.y, 0, 0.3, 0.005, 'Y Amp'),
+          warp_amp_z: numberControl(initial.warp.amount.z, 0, 0.3, 0.005, 'Z Amp'),
+          warp_freq_theta: numberControl(initial.warp.thetaFrequency, 0, 8, 0.1, 'Freq T'),
+          warp_freq_phi: numberControl(initial.warp.phiFrequency, 0, 8, 0.1, 'Freq P'),
+          warp_speed: numberControl(initial.warp.speed, 0, 3, 0.05, 'Speed'),
+        },
+      } satisfies FolderControl,
+      Density: {
+        type: 'folder' as const,
+        title: 'Density',
+        controls: {
+          density_base: numberControl(initial.density.base, 0.05, 1, 0.01, 'Base'),
+          'Layer One': waveFolder('Layer One', 'density_layer1', initial.density.layer1, 0.5),
+          'Layer Two': waveFolder('Layer Two', 'density_layer2', initial.density.layer2, 0.5),
+        },
+      } satisfies FolderControl,
+      Render: {
+        type: 'folder' as const,
+        title: 'Render',
+        controls: {
+          render_pointSize: numberControl(initial.render.pointSize, 1, 20, 0.5, 'Point Size'),
+          render_pointVariance: numberControl(initial.render.pointSizeVariance, 0, 1, 0.05, 'Size Variance'),
+          render_alpha: numberControl(initial.render.alpha, 0.05, 1, 0.05, 'Alpha'),
+          render_softness: numberControl(initial.render.softness, 0.1, 2, 0.05, 'Softness'),
+        },
+      } satisfies FolderControl,
+      Camera: {
+        type: 'folder' as const,
+        title: 'Camera',
+        controls: {
+          cam_autoRotate: { value: initial.camera.autoRotate, label: 'Auto Rotate' },
+          cam_autoRotateSpeed: numberControl(initial.camera.autoRotateSpeed, 0, 3, 0.1, 'Rotate Speed'),
+          Views: {
+            type: 'folder' as const,
+            title: 'Views',
+            controls: {
+              cam_view_front: {
+                type: 'button' as const,
+                label: 'Front',
+                onClick: () => applyViewPreset(actions.setFrontView),
+              },
+              cam_view_side: {
+                type: 'button' as const,
+                label: 'Side',
+                onClick: () => applyViewPreset(actions.setSideView),
+              },
+              cam_view_axis: {
+                type: 'button' as const,
+                label: 'Axis',
+                onClick: () => applyViewPreset(actions.setAxisView),
+              },
+              cam_view_isometric: {
+                type: 'button' as const,
+                label: 'Isometric',
+                onClick: () => applyViewPreset(actions.setIsometricView),
+              },
+            },
+          } satisfies FolderControl,
+        },
+      } satisfies FolderControl,
+      Presets: {
+        type: 'folder' as const,
+        title: 'Presets',
+        controls: {
+          preset_reset: {
+            type: 'button' as const,
+            label: 'Reset Tuning',
+            onClick: resetTuning,
+          },
+        },
+      } satisfies FolderControl,
+    }),
+    [
+      actions.setAxisView,
+      actions.setFrontView,
+      actions.setIsometricView,
+      actions.setSideView,
+      applyViewPreset,
+      initial,
+      resetTuning,
+    ],
+  );
 
-    pointSize:       { value: initial.pointSize,       min: 1.0,   max: 20.0,    step: 0.5 },
-    pointSizeVariance: { value: initial.pointSizeVariance, min: 0, max: 1.0,     step: 0.05 },
-    alpha:           { value: initial.alpha,            min: 0.05,  max: 1.0,     step: 0.05 },
-    softness:        { value: initial.softness,        min: 0.1,   max: 2.0,     step: 0.05 },
-    haloSpread:      { value: initial.haloSpread,      min: 0,     max: 0.3,     step: 0.005 },
-
-    autoRotateSpeed: { value: initial.autoRotateSpeed, min: 0,     max: 3.0,     step: 0.1 },
-  });
-
+  setValuesRef.current = setValues;
   return valuesToTuning(values);
+}
+
+function numberControl(
+  value: number,
+  min: number,
+  max: number,
+  step: number,
+  label: string,
+) {
+  return { value, min, max, step, label };
+}
+
+function waveFolder(
+  title: string,
+  prefix: string,
+  initial: PlasmaToroidWaveChannel,
+  maxAmplitude: number,
+): FolderControl {
+  return {
+    type: 'folder',
+    title,
+    controls: {
+      [`${prefix}_amp`]: numberControl(initial.amplitude, 0, maxAmplitude, 0.005, 'Amplitude'),
+      [`${prefix}_freq_theta`]: numberControl(initial.thetaFrequency, 0, 10, 0.1, 'Freq T'),
+      [`${prefix}_freq_phi`]: numberControl(initial.phiFrequency, 0, 10, 0.1, 'Freq P'),
+      [`${prefix}_speed`]: numberControl(initial.speed, 0, 3, 0.05, 'Speed'),
+    },
+  };
+}
+
+function tuningToControlValues(tuning: PlasmaToroidTuning): Partial<FlatValues> {
+  return {
+    geo_particleCount: tuning.particleCount,
+    geo_majorRadius: tuning.geometry.majorRadius,
+    geo_minorRadius: tuning.geometry.minorRadius,
+    geo_haloSpread: tuning.geometry.haloSpread,
+    orbit_theta_direction: tuning.orbit.aroundRingDirection,
+    orbit_theta_speed: tuning.orbit.aroundRingSpeed,
+    orbit_phi_speed: tuning.orbit.aroundTubeSpeed,
+    flow_theta_amp: tuning.flow.thetaDrift.amplitude,
+    flow_theta_freq_theta: tuning.flow.thetaDrift.thetaFrequency,
+    flow_theta_freq_phi: tuning.flow.thetaDrift.phiFrequency,
+    flow_theta_speed: tuning.flow.thetaDrift.speed,
+    flow_phi_amp: tuning.flow.phiDrift.amplitude,
+    flow_phi_freq_theta: tuning.flow.phiDrift.thetaFrequency,
+    flow_phi_freq_phi: tuning.flow.phiDrift.phiFrequency,
+    flow_phi_speed: tuning.flow.phiDrift.speed,
+    wobble_ring_amp: tuning.wobble.ring.amplitude,
+    wobble_ring_freq_theta: tuning.wobble.ring.thetaFrequency,
+    wobble_ring_freq_phi: tuning.wobble.ring.phiFrequency,
+    wobble_ring_speed: tuning.wobble.ring.speed,
+    wobble_radial_amp: tuning.wobble.radial.amplitude,
+    wobble_radial_freq_theta: tuning.wobble.radial.thetaFrequency,
+    wobble_radial_freq_phi: tuning.wobble.radial.phiFrequency,
+    wobble_radial_speed: tuning.wobble.radial.speed,
+    wobble_binormal_amp: tuning.wobble.binormal.amplitude,
+    wobble_binormal_freq_theta: tuning.wobble.binormal.thetaFrequency,
+    wobble_binormal_freq_phi: tuning.wobble.binormal.phiFrequency,
+    wobble_binormal_speed: tuning.wobble.binormal.speed,
+    wobble_tangent_amp: tuning.wobble.tangent.amplitude,
+    wobble_tangent_freq_theta: tuning.wobble.tangent.thetaFrequency,
+    wobble_tangent_freq_phi: tuning.wobble.tangent.phiFrequency,
+    wobble_tangent_speed: tuning.wobble.tangent.speed,
+    warp_enabled: tuning.warp.enabled,
+    warp_amp_x: tuning.warp.amount.x,
+    warp_amp_y: tuning.warp.amount.y,
+    warp_amp_z: tuning.warp.amount.z,
+    warp_freq_theta: tuning.warp.thetaFrequency,
+    warp_freq_phi: tuning.warp.phiFrequency,
+    warp_speed: tuning.warp.speed,
+    density_base: tuning.density.base,
+    density_layer1_amp: tuning.density.layer1.amplitude,
+    density_layer1_freq_theta: tuning.density.layer1.thetaFrequency,
+    density_layer1_freq_phi: tuning.density.layer1.phiFrequency,
+    density_layer1_speed: tuning.density.layer1.speed,
+    density_layer2_amp: tuning.density.layer2.amplitude,
+    density_layer2_freq_theta: tuning.density.layer2.thetaFrequency,
+    density_layer2_freq_phi: tuning.density.layer2.phiFrequency,
+    density_layer2_speed: tuning.density.layer2.speed,
+    render_pointSize: tuning.render.pointSize,
+    render_pointVariance: tuning.render.pointSizeVariance,
+    render_alpha: tuning.render.alpha,
+    render_softness: tuning.render.softness,
+    cam_autoRotate: tuning.camera.autoRotate,
+    cam_autoRotateSpeed: tuning.camera.autoRotateSpeed,
+  };
+}
+
+function value(v: FlatValues, key: string) {
+  return v[key];
 }
 
 function valuesToTuning(v: FlatValues): PlasmaToroidTuning {
   return {
-    particleCount:   v.particleCount   as number,
-    majorRadius:     v.majorRadius     as number,
-    minorRadius:     v.minorRadius     as number,
-
-    majorNoiseAmp1:  v.majorNoiseAmp1  as number,
-    majorNoiseAmp2:  v.majorNoiseAmp2  as number,
-
-    tubeNoiseAmp1:   v.tubeNoiseAmp1   as number,
-    tubeNoiseAmp2:   v.tubeNoiseAmp2   as number,
-    tubeNoiseAmp3:   v.tubeNoiseAmp3   as number,
-
-    densityBase:     v.densityBase     as number,
-    densityAmp1:     v.densityAmp1     as number,
-    densityAmp2:     v.densityAmp2     as number,
-
-    pointSize:       v.pointSize       as number,
-    pointSizeVariance: v.pointSizeVariance as number,
-    alpha:           v.alpha           as number,
-    softness:        v.softness        as number,
-    haloSpread:      v.haloSpread      as number,
-
-    autoRotateSpeed: v.autoRotateSpeed as number,
+    particleCount: value(v, 'geo_particleCount') as number,
+    geometry: {
+      majorRadius: value(v, 'geo_majorRadius') as number,
+      minorRadius: value(v, 'geo_minorRadius') as number,
+      haloSpread: value(v, 'geo_haloSpread') as number,
+    },
+    orbit: {
+      aroundRingDirection: value(v, 'orbit_theta_direction') as 'forward' | 'reverse' | 'mixed',
+      aroundRingSpeed: value(v, 'orbit_theta_speed') as number,
+      aroundTubeSpeed: value(v, 'orbit_phi_speed') as number,
+    },
+    flow: {
+      thetaDrift: {
+        amplitude: value(v, 'flow_theta_amp') as number,
+        thetaFrequency: value(v, 'flow_theta_freq_theta') as number,
+        phiFrequency: value(v, 'flow_theta_freq_phi') as number,
+        speed: value(v, 'flow_theta_speed') as number,
+      },
+      phiDrift: {
+        amplitude: value(v, 'flow_phi_amp') as number,
+        thetaFrequency: value(v, 'flow_phi_freq_theta') as number,
+        phiFrequency: value(v, 'flow_phi_freq_phi') as number,
+        speed: value(v, 'flow_phi_speed') as number,
+      },
+    },
+    wobble: {
+      ring: {
+        amplitude: value(v, 'wobble_ring_amp') as number,
+        thetaFrequency: value(v, 'wobble_ring_freq_theta') as number,
+        phiFrequency: value(v, 'wobble_ring_freq_phi') as number,
+        speed: value(v, 'wobble_ring_speed') as number,
+      },
+      radial: {
+        amplitude: value(v, 'wobble_radial_amp') as number,
+        thetaFrequency: value(v, 'wobble_radial_freq_theta') as number,
+        phiFrequency: value(v, 'wobble_radial_freq_phi') as number,
+        speed: value(v, 'wobble_radial_speed') as number,
+      },
+      binormal: {
+        amplitude: value(v, 'wobble_binormal_amp') as number,
+        thetaFrequency: value(v, 'wobble_binormal_freq_theta') as number,
+        phiFrequency: value(v, 'wobble_binormal_freq_phi') as number,
+        speed: value(v, 'wobble_binormal_speed') as number,
+      },
+      tangent: {
+        amplitude: value(v, 'wobble_tangent_amp') as number,
+        thetaFrequency: value(v, 'wobble_tangent_freq_theta') as number,
+        phiFrequency: value(v, 'wobble_tangent_freq_phi') as number,
+        speed: value(v, 'wobble_tangent_speed') as number,
+      },
+    },
+    warp: {
+      enabled: value(v, 'warp_enabled') as boolean,
+      amount: {
+        x: value(v, 'warp_amp_x') as number,
+        y: value(v, 'warp_amp_y') as number,
+        z: value(v, 'warp_amp_z') as number,
+      },
+      thetaFrequency: value(v, 'warp_freq_theta') as number,
+      phiFrequency: value(v, 'warp_freq_phi') as number,
+      speed: value(v, 'warp_speed') as number,
+    },
+    density: {
+      base: value(v, 'density_base') as number,
+      layer1: {
+        amplitude: value(v, 'density_layer1_amp') as number,
+        thetaFrequency: value(v, 'density_layer1_freq_theta') as number,
+        phiFrequency: value(v, 'density_layer1_freq_phi') as number,
+        speed: value(v, 'density_layer1_speed') as number,
+      },
+      layer2: {
+        amplitude: value(v, 'density_layer2_amp') as number,
+        thetaFrequency: value(v, 'density_layer2_freq_theta') as number,
+        phiFrequency: value(v, 'density_layer2_freq_phi') as number,
+        speed: value(v, 'density_layer2_speed') as number,
+      },
+    },
+    render: {
+      pointSize: value(v, 'render_pointSize') as number,
+      pointSizeVariance: value(v, 'render_pointVariance') as number,
+      alpha: value(v, 'render_alpha') as number,
+      softness: value(v, 'render_softness') as number,
+    },
+    camera: {
+      autoRotate: value(v, 'cam_autoRotate') as boolean,
+      autoRotateSpeed: value(v, 'cam_autoRotateSpeed') as number,
+    },
   };
 }

@@ -48,6 +48,7 @@
       "@lilypad/three-plasma-toroid-demo": [
         "libs/three/plasma-toroid-demo/src/index.ts"
       ],
+      "@lilypad/three-menu-demo": ["libs/three/menu-demo/src/index.ts"],
       "@lilypad/form-elements": ["libs/ui/form-elements/src/index.ts"]
     }
   },

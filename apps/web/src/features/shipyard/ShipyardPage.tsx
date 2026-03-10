@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
-import { DebugOverlay, useDebugControls } from '@lilypad/debug';
+import { DebugBridge, DebugPanel, useDebugControls } from '@lilypad/debug';
 import { AssetsPlugin } from '@lilypad/debug-assets';
 import { useAssetRegistry } from '@lilypad/three-assets';
 import { PageLayout } from '../layout/PageLayout';
@@ -22,8 +22,9 @@ export function ShipyardPage() {
 
   return (
     <PageLayout background="var(--color-deep-navy)">
+      <DebugPanel position="left" plugins={[AssetsPlugin(manager)]} />
       <Canvas
-        
+        style={{ flex: 1 }}
         camera={{
   position: [638.15, 490.96, 266.31],
   fov: 50,
@@ -45,8 +46,9 @@ export function ShipyardPage() {
           autoRotate={viewport.autoRotate as boolean}
           autoRotateSpeed={viewport.autoRotateSpeed as number}
         />
-        <DebugOverlay plugins={[AssetsPlugin(manager)]} />
+        <DebugBridge plugins={[AssetsPlugin(manager)]} />
       </Canvas>
+      <DebugPanel position="right" plugins={[AssetsPlugin(manager)]} />
     </PageLayout>
   );
 }

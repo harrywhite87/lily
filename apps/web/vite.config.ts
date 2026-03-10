@@ -61,6 +61,10 @@ export default defineConfig({
         __dirname,
         '../../libs/three/plasma-toroid-demo/src',
       ),
+      '@lilypad/three-menu-demo': path.resolve(
+        __dirname,
+        '../../libs/three/menu-demo/src',
+      ),
     },
   },
   css: {

@@ -3,4 +3,6 @@
   inset: 0;
   padding-top: var(--size-800);
   overflow: hidden;
+  display: flex;
+  flex-direction: row;
 }

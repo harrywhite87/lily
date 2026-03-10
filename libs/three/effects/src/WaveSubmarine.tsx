@@ -77,6 +77,8 @@ export function WaveSubmarine({
   const lastWallRef = useRef<number | null>(null);
   const accTimeRef = useRef(0);
   const resetRef = useRef(false);
+  const heaveVelocityRef = useRef(0);
+  const previousPosRef = useRef(new THREE.Vector3(0, 0, 0));
 
   const keys = useKeyboard();
 
@@ -152,6 +154,8 @@ export function WaveSubmarine({
       basis: new THREE.Matrix4(),
       modelFix: new THREE.Quaternion(),
       arrowDir: new THREE.Vector3(),
+      targetQuat: new THREE.Quaternion(),
+      renderedFwd: new THREE.Vector3(),
     }),
     [],
   );
@@ -248,6 +252,8 @@ export function WaveSubmarine({
       posRef.current.set(0, 0, 0);
       accTimeRef.current = 0;
       lastWallRef.current = null;
+      heaveVelocityRef.current = 0;
+      previousPosRef.current.set(0, 0, 0);
     }
 
     const wallTime = clock.getElapsedTime();
@@ -293,8 +299,15 @@ export function WaveSubmarine({
     const hullHeading = heading - Math.PI / 2;
     const avgHeight = avgWaveHeight(pos.x, pos.z, t, hullHeading, hullLength, hullWidth, hullSamples);
     const baseWaterLevel = -waveConfig.waveDepth;
-    const waveY = THREE.MathUtils.lerp(baseWaterLevel, avgHeight, waveInfluence) + verticalOffset;
-    pos.y = waveY;
+    const targetY = THREE.MathUtils.lerp(baseWaterLevel, avgHeight, waveInfluence) + verticalOffset;
+
+    // Spring-damped heave: gives the hull inertia instead of snapping to wave height
+    const stiffness = 14;
+    const damping = 8;
+    const displacement = targetY - pos.y;
+    heaveVelocityRef.current += displacement * stiffness * dt;
+    heaveVelocityRef.current *= Math.exp(-damping * dt);
+    pos.y += heaveVelocityRef.current * dt;
 
     avgWaveNormal(pos.x, pos.z, t, hullHeading, hullLength, hullWidth, hullSamples, tmp.up);
     const normalBlend = Math.min(waveInfluence, 1.0);
@@ -305,7 +318,7 @@ export function WaveSubmarine({
     const z2 = pos.z + dirZ * lookAheadDist;
     const avgHeight2 = avgWaveHeight(x2, z2, t, hullHeading, hullLength, hullWidth, hullSamples);
     const waveY2 = THREE.MathUtils.lerp(baseWaterLevel, avgHeight2, waveInfluence) + verticalOffset;
-    const pitchSlope = (waveY2 - waveY) / lookAheadDist;
+    const pitchSlope = (waveY2 - targetY) / lookAheadDist;
 
     tmp.forward.set(dirX, pitchSlope, dirZ).normalize();
     tmp.right.crossVectors(tmp.forward, tmp.blendedUp);
@@ -329,23 +342,51 @@ export function WaveSubmarine({
     // makeBasis expects the local +Z column, which is the opposite.
     tmp.basisZ.copy(tmp.forwardOrtho).negate();
     tmp.basis.makeBasis(tmp.right, tmp.blendedUp, tmp.basisZ);
-    group.quaternion.setFromRotationMatrix(tmp.basis);
 
+    // Build target quaternion with roll and model offset, then slerp toward it
+    tmp.targetQuat.setFromRotationMatrix(tmp.basis);
     const rollAmount = -steer * speedFrac * 0.08;
-    group.rotateZ(rollAmount);
-
+    tmp.targetQuat.multiply(
+      tmp.modelFix.setFromAxisAngle(tmp.forwardOrtho, rollAmount),
+    );
     tmp.modelFix.setFromAxisAngle(tmp.worldUp, modelYawOffset);
-    group.quaternion.multiply(tmp.modelFix);
+    tmp.targetQuat.multiply(tmp.modelFix);
+
+    group.quaternion.slerp(tmp.targetQuat, 1.0 - Math.exp(-8 * dt));
     group.position.copy(pos);
+
+    // Compute frame-to-frame velocity for hull interaction data
+    const safeDt = Math.max(dt, 1e-5);
+    const vx = (pos.x - previousPosRef.current.x) / safeDt;
+    const vz = (pos.z - previousPosRef.current.z) / safeDt;
+    const speed = Math.hypot(vx, vz);
+
+    // Derive the rendered heading from the actual group quaternion (post-slerp)
+    // so the water interaction field tracks the visual submarine, not the
+    // unsmoothed control heading.
+    tmp.renderedFwd.set(0, 0, -1).applyQuaternion(group.quaternion);
+    // Strip the modelYawOffset that was baked into the quaternion
+    const cosOff = Math.cos(-modelYawOffset);
+    const sinOff = Math.sin(-modelYawOffset);
+    const rfx = tmp.renderedFwd.x * cosOff - tmp.renderedFwd.z * sinOff;
+    const rfz = tmp.renderedFwd.x * sinOff + tmp.renderedFwd.z * cosOff;
+    const renderedHeading = Math.atan2(rfx, -rfz);
+    const renderedHullHeading = renderedHeading - Math.PI / 2;
 
     const info = debugHull?.current;
     if (info) {
       info.center.set(pos.x, pos.z);
       info.length = hullLength;
       info.width = hullWidth;
-      info.heading = hullHeading;
+      info.heading = renderedHullHeading;
       info.show = showHullDebug;
+      info.velocity.set(vx, vz);
+      info.speed = speed;
+      info.heaveVelocity = heaveVelocityRef.current;
+      info.active = true;
     }
+
+    previousPosRef.current.copy(pos);
 
     const arrow = arrowRef.current;
     if (arrow) {
